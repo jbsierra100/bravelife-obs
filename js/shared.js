@@ -4,6 +4,7 @@
 window.BL = (function () {
   const DEFAULTS = {
     v: 0,
+    schema: 2,
     live:     { show: true },
     logo:     { show: true },
     episode:  { show: true, name: 'BRAVE LIFE PODCAST', ep: 'EP. 01' },
@@ -13,7 +14,8 @@ window.BL = (function () {
       { first: 'SARAH', last: 'BRAVENBOER', role: 'LEAD PASTOR • BRAVE LIFE', tag: 'HOST' },
       { first: 'GUEST', last: 'NAME',       role: 'GUEST TITLE • CHURCH',     tag: 'GUEST' }
     ],
-    lower:    { show: false, person: 0, shownAt: 0, autoHide: 10 },
+    // Troy is the main speaker → his name tag is ON by default and stays on (Hide button still works)
+    lower:    { show: true, person: 0, shownAt: 0, autoHide: 0 },
     tags:     { left: { show: true, person: 0 }, right: { show: true, person: 2 } },
     topic:    { show: true, label: 'NOW DISCUSSING', text: 'Topic goes here',
                 list: ['Topic goes here', 'Common goal, trust, honor', 'Q&A from the chat'] },
@@ -51,11 +53,20 @@ window.BL = (function () {
     try { const raw = localStorage.getItem(KEY); return raw ? JSON.parse(raw) : {}; } catch (e) { return {}; }
   }
 
+  // older saved settings (schema 1) had the name tag auto-hiding; switch them to "always show" once
+  function upgrade(saved) {
+    if (saved && (saved.schema || 1) < 2) {
+      saved.lower = Object.assign({}, saved.lower, { show: true, autoHide: 0 });
+      saved.schema = 2;
+    }
+    return saved;
+  }
+
   async function load() {
-    if (mode === 'local') return merge(DEFAULTS, readLocal());
+    if (mode === 'local') return merge(DEFAULTS, upgrade(readLocal()));
     try {
       const r = await fetch('/state?t=' + Date.now(), { cache: 'no-store' });
-      return merge(DEFAULTS, await r.json());
+      return merge(DEFAULTS, upgrade(await r.json()));
     } catch (e) { return null; }
   }
 
