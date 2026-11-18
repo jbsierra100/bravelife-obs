@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brave Life Overlay Control</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@600;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0d; --panel: #1a1918; --panel-2: #222120; --line: rgba(255,255,255,.08);
+    --text: #f4f1ec; --muted: #a89886; --mint: #00e1aa; --mint-2: #5ffcc0; --ink: #0a0908; --red: #ff5a5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 500 14px/1.4 'Manrope', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: rgba(15,14,13,.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0; font: 800 18px 'Kanit'; letter-spacing: .04em; }
+  header h1 em { font-style: normal; color: var(--mint); }
+  .status { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .status i { width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+  .status.ok i { background: var(--mint); box-shadow: 0 0 8px var(--mint); }
+  .spacer { flex: 1; }
+  main { padding: 16px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); max-width: 1500px; margin: 0 auto; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; min-width: 0; }
+  section.wide { grid-column: 1 / -1; }
+  h2 { margin: 0 0 12px; display: flex; align-items: center; gap: 10px; font: 800 12px 'Manrope'; letter-spacing: .2em; color: var(--muted); text-transform: uppercase; }
+  h2 .spacer { flex: 1; }
+  .hint { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+  label.f { display: block; font-size: 11px; font-weight: 700; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; margin: 10px 0 5px; }
+  input, select { width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; font: 600 14px 'Manrope'; outline: none; min-width: 0; }
+  input:focus, select:focus { border-color: var(--mint); }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > * { min-width: 0; }
+  button { cursor: pointer; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); border-radius: 10px; padding: 9px 14px; font: 800 13px 'Manrope'; letter-spacing: .04em; white-space: nowrap; }
+  button:hover { border-color: rgba(255,255,255,.25); }
+  button.go { background: linear-gradient(135deg, var(--mint-2), var(--mint)); color: var(--ink); border: 0; }
+  button.danger { color: #ffb4b6; }
+  button.sm { padding: 6px 10px; font-size: 12px; }
+  .toggle { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px 7px 8px; }
+  .toggle::before { content: ''; width: 30px; height: 18px; border-radius: 9px; background: #3a3836; box-shadow: inset 0 0 0 1px var(--line); transition: .2s; }
+  .toggle[aria-pressed="true"]::before { background: var(--mint); box-shadow: 0 0 10px rgba(0,225,170,.5); }
+  .toggles { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  /* preview */
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .tabs button { padding: 7px 12px; font-size: 12px; }
+  .tabs button.on { border-color: var(--mint); color: var(--mint); }
+  .stage { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; border: 1px solid var(--line); }
+  .stage iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; transform-origin: 0 0; }
+  .url { display: flex; gap: 8px; margin-top: 10px; }
+  .url input { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--mint-2); }
+
+  /* countdown */
+  .clock { font: 600 64px/1 'Kanit'; text-align: center; padding: 10px 0 14px; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+  .clock.run { color: var(--mint-2); text-shadow: 0 0 20px rgba(0,225,170,.35); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+
+  /* people */
+  .person { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; background: rgba(255,255,255,.015); }
+  .person.active { border-color: var(--mint); box-shadow: 0 0 0 1px var(--mint) inset; }
+  .person .full { grid-column: 1 / -1; }
+  .person .acts { grid-column: 1 / -1; display: flex; gap: 6px; }
+  .person .acts .go { flex: 1; }
+  .meter { height: 4px; border-radius: 2px; background: #2b2a28; overflow: hidden; margin-top: 10px; }
+  .meter i { display: block; height: 100%; width: 0; background: var(--mint); transition: width .2s linear; }
+
+  /* topics */
+  .now { padding: 12px 14px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line); margin-bottom: 10px; }
+  .now small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .2em; color: var(--mint); }
+  .now b { font-size: 17px; }
+  .chips { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .chip { display: flex; gap: 6px; }
+  .chip button.pick { flex: 1; text-align: left; white-space: normal; font-weight: 700; }
+  .chip button.pick.on { border-color: var(--mint); color: var(--mint-2); }
+
+  .banner { display: none; margin: 16px; padding: 14px 16px; border-radius: 12px; background: #3a1f1f; color: #ffd7d8; border: 1px solid #6b2c2e; }
+  body.offline .banner { display: block; }
+</style>
+</head>
+<body>
+<header>
+  <h1>BRAVE LIFE <em>•</em> OVERLAY CONTROL</h1>
+  <div class="status" id="status"><i></i><span>connecting…</span></div>
+  <div class="spacer"></div>
+  <a href="links.html" target="_blank" rel="noopener" style="text-decoration:none"><button title="Lahat ng OBS links na may Copy buttons">🔗 All links</button></a>
+  <button class="danger" id="hideAll" title="Itago lahat ng graphics (except LIVE at logo)">Hide all</button>
+</header>
+<div class="banner" id="banner">Naka-bukas ito as a file, kaya hindi nito makokontrol ang OBS. I-double-click muna ang <b>START OVERLAYS.bat</b>, tapos buksan ang <b>http://localhost:7777/control.html</b>.</div>
+
+<main>
+  <section class="wide">
+    <h2>Preview <span class="spacer"></span><span style="letter-spacing:.06em;text-transform:none;font-weight:600">Ito mismo ang lalabas sa OBS</span></h2>
+    <div class="tabs" id="tabs"></div>
+    <div class="stage" id="stage"><iframe id="pv" title="Overlay preview"></iframe></div>
+    <div class="url"><input id="url" readonly><button id="copy">Copy OBS URL</button></div>
+  </section>
+
+  <section>
+    <h2>Countdown <span class="spacer"></span><button class="toggle sm" data-t="countdown.show">Show</button></h2>
+    <div class="clock" id="clock">05:00</div>
+    <div class="grid2">
+      <button class="go" id="cdStart">▶ Start</button>
+      <button id="cdPause">❚❚ Pause</button>
+    </div>
+    <div class="grid4">
+      <button class="sm" data-add="-60">−1 min</button>
+      <button class="sm" data-add="60">+1 min</button>
+      <button class="sm" data-add="300">+5 min</button>
+      <button class="sm" id="cdReset">Reset</button>
+    </div>
+    <div class="grid2">
+      <div><label class="f">Minutes (reset value)</label><input type="number" min="0" step="0.5" id="cdMin"></div>
+      <div><label class="f">Label</label><input id="cdLabel" placeholder="LIVE IN"></div>
+    </div>
+    <label class="f">Text pag 00:00 na (optional)</label><input id="cdDone" placeholder="e.g. STARTING NOW — blank = 00:00">
+  </section>
+
+  <section>
+    <h2>Live & Branding</h2>
+    <div class="toggles">
+      <button class="toggle" data-t="live.show">LIVE badge</button>
+    </div>
+    <h2 style="margin-top:18px">Give scene — QR code</h2>
+    <label class="f">Link ng QR (saan dadalhin pag na-scan)</label><input data-v="give.url" placeholder="https://bravelifenow.com/give">
+    <p class="hint">Automatic na gagawa ng bagong QR sa Give scene pag pinalitan mo ito. I-test muna sa phone bago mag-live.</p>
+  </section>
+
+  <section>
+    <h2>Lower third <span class="spacer"></span><button class="sm danger" id="lowerHide">Hide</button></h2>
+    <div class="row">
+      <label class="f" style="margin:0;flex:none">Auto-hide</label>
+      <select id="autoHide"><option value="0">Stay on</option><option value="5">5 sec</option><option value="8">8 sec</option><option value="10">10 sec</option><option value="15">15 sec</option><option value="20">20 sec</option></select>
+    </div>
+    <div class="meter"><i id="meter"></i></div>
+    <div id="people" style="margin-top:12px"></div>
+    <button class="sm" id="addPerson">+ Add person</button>
+    <p class="hint">Para sa <b>Solo Host</b> at <b>Screen Share</b>. I-click ang <b>Show</b> pag nagsimula nang magsalita ang tao. Ginagamit din ang listahang ito sa Side-by-Side names.</p>
+  </section>
+
+  <section>
+    <h2>Side-by-Side names</h2>
+    <label class="f">Left window (host)</label>
+    <div class="row"><select id="tagLsel"></select><button class="toggle sm" data-t="tags.left.show">Show</button></div>
+    <label class="f">Right window (guest)</label>
+    <div class="row"><select id="tagRsel"></select><button class="toggle sm" data-t="tags.right.show">Show</button></div>
+    <div style="margin-top:10px"><button class="sm" id="swapTags">⇄ Swap</button></div>
+  </section>
+
+  <section style="display:none">  <!-- topic pill isn't used in the 6 final scenes -->
+    <h2>Now discussing <span class="spacer"></span><button class="toggle sm" data-t="topic.show">Show</button></h2>
+    <div class="now"><small id="topicLabelNow">NOW DISCUSSING</small><b id="topicNow"></b></div>
+    <div class="row"><input id="topicIn" placeholder="Type new topic, then Enter"><button class="go" id="topicGo">Update</button></div>
+    <div class="chips" id="chips"></div>
+    <div class="row" style="margin-top:8px"><button class="sm" id="topicSave">+ Save typed topic to list</button></div>
+    <label class="f">Label</label><input data-v="topic.label">
+  </section>
+</main>
+
+<script src="js/shared.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+let S = BL.merge(BL.DEFAULTS, {});
+/* The 6 final OBS scenes (in show order) */
+const LAYOUTS = [
+  ['starting', '1 · Starting Soon'], ['solo', '2 · Solo Host'], ['screen', '3 · Screen Share + Host'],
+  ['side', '4 · Side-by-Side'], ['give', '5 · Give (QR)'], ['nextweek', '6 · See You Next Week']
+];
+const pageFor = (k, preview) => k === 'starting' ? 'starting-soon.html' : `scene.html?s=${k}${preview ? '&preview=1' : ''}`;
+let layout = (() => { try { return localStorage.getItem('bl-layout') || 'solo'; } catch (e) { return 'solo'; } })();
+
+const get = (path) => path.split('.').reduce((o, k) => o[k], S);
+const put = (path, val) => { const ks = path.split('.'); const last = ks.pop(); ks.reduce((o, k) => o[k], S)[last] = val; };
+
+/* ---------- save + push to preview ---------- */
+let saving = Promise.resolve();
+function commit(rebuild) {
+  S.v = Date.now();
+  saving = saving.then(() => BL.save(S)).then(ok => setStatus(ok));
+  const fr = $('pv'); if (fr.contentWindow) fr.contentWindow.postMessage({ type: 'bl-state', state: S }, '*');
+  if (rebuild) { buildPeople(); buildChips(); }
+  sync();
+}
+function setStatus(ok) {
+  const st = $('status');
+  st.classList.toggle('ok', ok && BL.served);
+  st.querySelector('span').textContent = !BL.served ? 'offline (file)' : BL.mode === 'local' ? 'online · synced in this OBS' : ok ? 'connected' : 'server not running';
+}
+
+/* ---------- preview ---------- */
+function buildTabs() {
+  $('tabs').innerHTML = LAYOUTS.map(([k, n]) => `<button data-l="${k}" class="${k === layout ? 'on' : ''}">${n}</button>`).join('');
+  $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { layout = b.dataset.l; try { localStorage.setItem('bl-layout', layout); } catch (e) {} buildTabs(); loadPreview(); });
+}
+function loadPreview() {
+  if (!LAYOUTS.some(([k]) => k === layout)) layout = 'starting';
+  $('pv').src = pageFor(layout, true);
+  $('url').value = location.protocol.startsWith('http') ? new URL(pageFor(layout, false), location.href).href : `http://localhost:7777/${pageFor(layout, false)}`;
+}
+$('pv').onload = () => $('pv').contentWindow.postMessage({ type: 'bl-state', state: S }, '*');
+new ResizeObserver(() => { $('pv').style.transform = `scale(${$('stage').clientWidth / 1920})`; }).observe($('stage'));
+$('copy').onclick = async () => { try { await navigator.clipboard.writeText($('url').value); } catch (e) { $('url').select(); document.execCommand('copy'); } $('copy').textContent = 'Copied ✓'; setTimeout(() => $('copy').textContent = 'Copy OBS URL', 1400); };
+
+/* ---------- generic toggles + text fields ---------- */
+document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { put(b.dataset.t, !get(b.dataset.t)); commit(); });
+document.querySelectorAll('[data-v]').forEach(i => i.onchange = () => { put(i.dataset.v, i.value); commit(); });
+document.querySelectorAll('[data-v]').forEach(i => i.onkeydown = e => { if (e.key === 'Enter') i.blur(); });
+
+/* ---------- countdown ---------- */
+const C = () => S.countdown;
+$('cdStart').onclick = () => {
+  const c = C(); const ms = BL.remainingMs(c) || c.minutes * 60000;
+  c.running = true; c.endAt = Date.now() + ms; c.show = true; commit();
+};
+$('cdPause').onclick = () => {
+  const c = C();
+  if (c.running) { c.remainingMs = BL.remainingMs(c); c.running = false; }
+  else if (c.remainingMs > 0) { c.running = true; c.endAt = Date.now() + c.remainingMs; }
+  commit();
+};
+$('cdReset').onclick = () => { const c = C(); c.running = false; c.remainingMs = c.minutes * 60000; commit(); };
+document.querySelectorAll('[data-add]').forEach(b => b.onclick = () => {
+  const c = C(), d = +b.dataset.add * 1000;
+  if (c.running) c.endAt = Math.max(Date.now(), c.endAt + d); else c.remainingMs = Math.max(0, c.remainingMs + d);
+  commit();
+});
+$('cdMin').onchange = () => { const c = C(); c.minutes = Math.max(0, +$('cdMin').value || 0); if (!c.running) c.remainingMs = c.minutes * 60000; commit(); };
+$('cdLabel').onchange = () => { C().label = $('cdLabel').value; commit(); };
+$('cdDone').onchange = () => { C().doneText = $('cdDone').value; commit(); };
+
+/* ---------- lower third + people ---------- */
+function buildPeople() {
+  const opts = S.people.map((p, i) => `<option value="${i}">${BL.esc((p.first + ' ' + p.last).trim() || 'Person ' + (i + 1))}</option>`).join('');
+  $('tagLsel').innerHTML = opts; $('tagRsel').innerHTML = opts;
+  $('people').innerHTML = S.people.map((p, i) => `
+    <div class="person" data-i="${i}">
+      <input data-p="first" value="${BL.esc(p.first)}" placeholder="FIRST (bold)">
+      <input data-p="last" value="${BL.esc(p.last)}" placeholder="LAST">
+      <input class="full" data-p="role" value="${BL.esc(p.role)}" placeholder="ROLE • CHURCH (lower third)">
+      <input data-p="tag" value="${BL.esc(p.tag)}" placeholder="HOST / GUEST">
+      <div class="acts"><button class="go sm" data-show>▶ Show</button><button class="sm danger" data-del title="Remove">✕</button></div>
+    </div>`).join('');
+  $('people').querySelectorAll('.person').forEach(row => {
+    const i = +row.dataset.i;
+    row.querySelectorAll('[data-p]').forEach(inp => {
+      inp.onchange = () => { S.people[i][inp.dataset.p] = inp.value; commit(); buildPeopleOptions(); };
+      inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); };
+    });
+    row.querySelector('[data-show]').onclick = () => { S.lower.person = i; S.lower.show = true; S.lower.shownAt = Date.now(); commit(); };
+    row.querySelector('[data-del]').onclick = () => {
+      if (S.people.length <= 1 || !confirm('Remove ' + (S.people[i].first || 'this person') + '?')) return;
+      S.people.splice(i, 1);
+      for (const t of [S.tags.left, S.tags.right]) if (t.person >= S.people.length) t.person = 0;
+      if (S.lower.person >= S.people.length) { S.lower.person = 0; S.lower.show = false; }
+      commit(true);
+    };
+  });
+}
+function buildPeopleOptions() {
+  const opts = S.people.map((p, i) => `<option value="${i}">${BL.esc((p.first + ' ' + p.last).trim() || 'Person ' + (i + 1))}</option>`).join('');
+  $('tagLsel').innerHTML = opts; $('tagRsel').innerHTML = opts; sync();
+}
+$('addPerson').onclick = () => { S.people.push({ first: 'FIRST', last: 'LAST', role: 'ROLE • CHURCH', tag: 'GUEST' }); commit(true); };
+$('lowerHide').onclick = () => { S.lower.show = false; commit(); };
+$('autoHide').onchange = () => { S.lower.autoHide = +$('autoHide').value; S.lower.shownAt = Date.now(); commit(); };
+$('tagLsel').onchange = () => { S.tags.left.person = +$('tagLsel').value; commit(); };
+$('tagRsel').onchange = () => { S.tags.right.person = +$('tagRsel').value; commit(); };
+$('swapTags').onclick = () => { const a = S.tags.left.person; S.tags.left.person = S.tags.right.person; S.tags.right.person = a; commit(); };
+
+/* ---------- topics ---------- */
+function setTopic(t) { t = t.trim(); if (!t) return; S.topic.text = t; S.topic.show = true; commit(); }
+$('topicGo').onclick = () => { setTopic($('topicIn').value); $('topicIn').value = ''; };
+$('topicIn').onkeydown = e => { if (e.key === 'Enter') $('topicGo').onclick(); };
+$('topicSave').onclick = () => { const t = $('topicIn').value.trim(); if (!t) return; S.topic.list.push(t); $('topicIn').value = ''; commit(true); };
+function buildChips() {
+  $('chips').innerHTML = S.topic.list.map((t, i) => `<div class="chip"><button class="pick" data-i="${i}">${BL.esc(t)}</button><button class="sm danger" data-x="${i}" title="Remove">✕</button></div>`).join('');
+  $('chips').querySelectorAll('.pick').forEach(b => b.onclick = () => setTopic(S.topic.list[+b.dataset.i]));
+  $('chips').querySelectorAll('[data-x]').forEach(b => b.onclick = () => { S.topic.list.splice(+b.dataset.x, 1); commit(true); });
+}
+
+/* ---------- hide all ---------- */
+$('hideAll').onclick = () => {
+  S.lower.show = false; S.tags.left.show = false; S.tags.right.show = false;
+  S.topic.show = false; S.cta.show = false; commit();
+};
+
+/* ---------- reflect state in the UI (skips the field you're typing in) ---------- */
+function sync() {
+  document.querySelectorAll('[data-t]').forEach(b => b.setAttribute('aria-pressed', !!get(b.dataset.t)));
+  document.querySelectorAll('[data-v]').forEach(i => { if (document.activeElement !== i) i.value = get(i.dataset.v); });
+  const c = C();
+  if (document.activeElement !== $('cdMin')) $('cdMin').value = c.minutes;
+  if (document.activeElement !== $('cdLabel')) $('cdLabel').value = c.label;
+  if (document.activeElement !== $('cdDone')) $('cdDone').value = c.doneText;
+  $('cdPause').textContent = c.running ? '❚❚ Pause' : '▶ Resume';
+  $('cdPause').disabled = !c.running && c.remainingMs <= 0;
+  $('autoHide').value = String(S.lower.autoHide);
+  $('tagLsel').value = S.tags.left.person; $('tagRsel').value = S.tags.right.person;
+  $('topicNow').textContent = S.topic.text; $('topicLabelNow').textContent = S.topic.label;
+  $('chips').querySelectorAll('.pick').forEach(b => b.classList.toggle('on', S.topic.list[+b.dataset.i] === S.topic.text));
+  tick();
+}
+function tick() {
+  const c = C(), ms = BL.remainingMs(c);
+  $('clock').textContent = BL.fmt(ms); $('clock').classList.toggle('run', c.running && ms > 0);
+  const vis = BL.lowerVisible(S.lower);
+  $('people').querySelectorAll('.person').forEach(r => r.classList.toggle('active', vis && +r.dataset.i === S.lower.person));
+  const pct = vis ? (S.lower.autoHide ? 100 * (1 - (Date.now() - S.lower.shownAt) / (S.lower.autoHide * 1000)) : 100) : 0;
+  $('meter').style.width = Math.max(0, pct) + '%';
+}
+setInterval(tick, 200);
+
+/* ---------- start ---------- */
+(async () => {
+  if (!BL.served) document.body.classList.add('offline');
+  const st = await BL.load();
+  if (st) S = st;
+  setStatus(!!st);
+  buildTabs(); loadPreview(); buildPeople(); buildChips(); sync();
+  // keep a 2nd control page (e.g. another laptop window) in sync
+  setInterval(async () => {
+    if (!BL.served) return;   // (local mode: load() reads browser storage, so syncing still works)
+    const st = await BL.load(); setStatus(!!st);
+    if (st && st.v > S.v && !document.activeElement.matches('input,select')) {
+      S = st; buildPeople(); buildChips(); sync();
+      const fr = $('pv'); if (fr.contentWindow) fr.contentWindow.postMessage({ type: 'bl-state', state: S }, '*');
+    }
+  }, 1500);
+})();
+</script>
+</body>
+</html>

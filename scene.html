@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brave Life — OBS Scene</title>
+<meta name="viewport" content="width=1920, height=1080">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  /* Final Brave Life OBS scenes (dark kit), built from the Figma frames on "Brave Life - Ideation":
+     solo = Dark Main Cam (6825:531) · screen = Dark Slides + Cam (6825:636) · side = Dark Interview (6825:758)
+     give = Scene 07 Give (6811:233) · nextweek = Dark Thank You (6825:886)
+     Static art comes from Figma (assets/scenes). Camera windows are transparent: put the camera sources BELOW this Browser Source. */
+  :root { --mint: #00e1aa; --mint-2: #5ffcc0; --ink: #0a0908; --taupe-2: #c8b7a3; }
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  body { position: relative; font-family: 'Manrope', sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+  body.preview { background: #1a1918; }
+  .layer { position: absolute; left: 0; top: 0; pointer-events: none; }
+  img.layer { width: 1920px; height: 1080px; display: block; }
+
+  /* ---------- moving glow ---------- */
+  .rainbow {
+    left: -300px; width: 2520px; filter: blur(70px);
+    background: linear-gradient(90deg,
+      #5856d6 0%, #af52de 6%, #ff2d92 12.5%, #ff6482 18.5%, #ff9500 25%, #ffd60a 31%, #30d158 37.5%, #40cbf0 43.5%, #007aff 50%,
+      #40cbf0 56.5%, #30d158 62.5%, #ffd60a 69%, #ff9500 75%, #ff6482 81.5%, #ff2d92 87.5%, #af52de 94%, #5856d6 100%);
+    background-size: 200% 100%;
+    animation: hueflow 26s linear infinite, breathe 7s ease-in-out infinite, sway 19s ease-in-out infinite;
+  }
+  @keyframes hueflow { from { background-position: 0% 0; } to { background-position: -200% 0; } }
+  @keyframes breathe { 0%, 100% { opacity: calc(var(--op) * .8); } 50% { opacity: calc(var(--op) * 1.25); } }
+  @keyframes sway { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(110px, -16px); } }
+  img.drift { transform-origin: 50% 80%; animation: drift 16s ease-in-out infinite, prismfade 9s ease-in-out infinite; }
+  @keyframes drift { 0%, 100% { transform: scale(1.1) translate(-55px, 0); } 50% { transform: scale(1.14) translate(55px, -12px); } }
+  @keyframes prismfade { 0%, 100% { opacity: .8; } 50% { opacity: 1; filter: saturate(1.3); } }
+
+  /* ---------- glitch logo ---------- */
+  .logo { width: 117px; height: 117px; }
+  .logo img { position: absolute; inset: 0; width: 117px; height: 117px; display: block; }
+  .logo .base { animation: rgbshift 3.2s steps(1) infinite, jolt 5s infinite; }
+  .logo .r, .logo .c { opacity: 0; mix-blend-mode: screen; }
+  .logo .r { filter: drop-shadow(-4px 0 0 rgba(255, 30, 90, .9)) saturate(1.4); animation: sliceA 5s infinite; }
+  .logo .c { filter: drop-shadow(4px 0 0 rgba(0, 220, 255, .9)) saturate(1.4); animation: sliceB 5s infinite; }
+  @keyframes rgbshift {
+    0%  { filter: drop-shadow(1px 0 0 rgba(255, 30, 90, .35)) drop-shadow(-1px 0 0 rgba(0, 220, 255, .35)); }
+    50% { filter: drop-shadow(-1px 0 0 rgba(255, 30, 90, .35)) drop-shadow(1px 0 0 rgba(0, 220, 255, .35)); }
+  }
+  @keyframes jolt { 0%, 84%, 100% { transform: none; } 85% { transform: translateX(-3px) skewX(-6deg); } 86% { transform: translateX(3px); } 87% { transform: translateX(-1px) skewX(4deg); } 88% { transform: none; } 93% { transform: translateX(2px); } 94% { transform: none; } }
+  @keyframes sliceA {
+    0%, 84%, 95%, 100% { opacity: 0; clip-path: inset(0 0 100% 0); transform: none; }
+    85% { opacity: 1; clip-path: inset(18% 0 58% 0); transform: translateX(-7px); }
+    86% { clip-path: inset(62% 0 14% 0); transform: translateX(6px); }
+    87% { clip-path: inset(38% 0 40% 0); transform: translateX(-4px); }
+    88% { opacity: 0; }
+    92% { opacity: 1; clip-path: inset(74% 0 8% 0); transform: translateX(5px); }
+    93% { clip-path: inset(8% 0 80% 0); transform: translateX(-3px); }
+  }
+  @keyframes sliceB {
+    0%, 84%, 95%, 100% { opacity: 0; clip-path: inset(0 0 100% 0); transform: none; }
+    85% { opacity: 1; clip-path: inset(48% 0 30% 0); transform: translateX(6px); }
+    86% { clip-path: inset(10% 0 72% 0); transform: translateX(-5px); }
+    87% { clip-path: inset(70% 0 12% 0); transform: translateX(4px); }
+    88% { opacity: 0; }
+    92% { opacity: 1; clip-path: inset(30% 0 52% 0); transform: translateX(-6px); }
+    93% { clip-path: inset(56% 0 26% 0); transform: translateX(3px); }
+  }
+
+  /* ---------- LIVE pill (Figma OBS / Live Pill 6811:250) ---------- */
+  .live {
+    width: 148px; height: 60px; border-radius: 100px; overflow: hidden;
+    background: linear-gradient(90deg, #5ffcc0, #00e1aa);
+    animation: liveglow 2.6s ease-in-out infinite;
+    transition: opacity .45s, transform .45s cubic-bezier(.2, .8, .2, 1); transform-origin: right center;
+  }
+  .live.hidden { opacity: 0; transform: scale(.7); }
+  .live .dot { position: absolute; left: 24px; top: 23px; width: 14px; height: 14px; border-radius: 50%; background: var(--ink); animation: livedot 1.3s ease-in-out infinite; }
+  .live .lbl { position: absolute; left: 50px; top: 12px; line-height: 36px; font-weight: 800; font-size: 26px; letter-spacing: .2em; color: var(--ink); }
+  .live .shine { position: absolute; top: 0; bottom: 0; width: 60px; left: -80px; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .65), transparent); animation: shine 4.5s ease-in-out infinite; }
+  @keyframes livedot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .25; transform: scale(.75); } }
+  @keyframes liveglow { 0%, 100% { box-shadow: 0 0 26px rgba(0, 225, 170, .45); } 50% { box-shadow: 0 0 44px rgba(0, 225, 170, .75); } }
+  @keyframes shine { 0%, 70% { left: -80px; } 90%, 100% { left: 170px; } }
+
+  /* ---------- lower third (Figma OBS / Lower Third 6811:243, scaled per scene) ---------- */
+  .lt { transform-origin: 0 0; }
+  .lt .card {
+    display: flex; align-items: stretch; gap: 26px; padding: 26px 48px 26px 28px; border-radius: 20px;
+    background: linear-gradient(180deg, rgba(36, 35, 33, .94), rgba(13, 12, 11, .94));
+    border: 1px solid rgba(255, 255, 255, .09);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .35);
+    clip-path: inset(0 100% 0 0 round 20px); opacity: 0;
+    transition: clip-path .35s cubic-bezier(.5, 0, .75, 0), opacity .35s;
+  }
+  .lt.on .card { clip-path: inset(-2px -2px -2px -2px round 20px); opacity: 1; transition: clip-path .7s cubic-bezier(.16, .84, .24, 1), opacity .3s; }
+  .lt .bar { width: 8px; border-radius: 4px; flex: none; background: linear-gradient(180deg, var(--mint-2), var(--mint)); box-shadow: 0 0 14px rgba(0, 225, 170, .75); transform: scaleY(0); transition: transform .3s; }
+  .lt.on .bar { transform: scaleY(1); transition: transform .6s cubic-bezier(.16, .84, .24, 1) .25s; }
+  .lt .txt > * { opacity: 0; transform: translateX(-18px); transition: opacity .25s, transform .25s; }
+  .lt.on .txt > * { opacity: 1; transform: none; transition: opacity .6s, transform .6s cubic-bezier(.16, .84, .24, 1); }
+  .lt.on .nm { transition-delay: .3s; } .lt.on .rl { transition-delay: .45s; }
+  .lt .nm { font-size: 46px; line-height: 63px; white-space: nowrap; }
+  .lt .nm b { font-weight: 800; } .lt .nm span { font-weight: 400; }
+  .lt .rl { margin-top: 6px; font-weight: 600; font-size: 22px; line-height: 30px; letter-spacing: .2em; color: var(--taupe-2); white-space: nowrap; }
+  .sep { display: inline-block; margin: 0 .7em; }
+
+  /* second, slower glow band flowing the other way = "aurora" feel instead of a stock gradient */
+  .rainbow.b { animation: hueflow 34s linear infinite reverse, breathe 9s ease-in-out infinite, wave 13s ease-in-out infinite; mix-blend-mode: screen; }
+  @keyframes wave { 0%, 100% { transform: translate(0, 0) scaleY(1); } 33% { transform: translate(-140px, 18px) scaleY(1.35); } 66% { transform: translate(90px, -14px) scaleY(.8); } }
+
+  /* ---------- Give QR tile (Figma 6864:2031) with attention glow ---------- */
+  @property --qa { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+  .qr .tile { position: absolute; inset: 0; border-radius: 24px; background: #fff; animation: qrglow 2.4s ease-in-out infinite; }
+  .qr .code { position: absolute; }
+  .qr .code svg { width: 100%; height: 100%; display: block; }
+  .qr .halo, .qr .ring { position: absolute; pointer-events: none; }
+  .qr .halo {      /* soft rotating aura around the tile */
+    inset: -14px; border-radius: 38px; filter: blur(22px); opacity: .45;
+    background: conic-gradient(from var(--qa), #00e1aa, #5ffcc0 18%, transparent 34%, #00e1aa 50%, #5ffcc0 68%, transparent 84%, #00e1aa);
+    animation: qspin 6s linear infinite, qbreath 2.4s ease-in-out infinite;
+  }
+  .qr .ring {      /* thin light running around the edge */
+    inset: -5px; border-radius: 29px; padding: 5px;
+    background: conic-gradient(from var(--qa), transparent 0 66%, rgba(95, 252, 192, .12) 74%, rgba(95, 252, 192, .7) 88%, rgba(255, 255, 255, .8) 90%, transparent 92%);
+    padding: 3px; inset: -3px; border-radius: 27px;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: qspin 3.2s linear infinite;
+  }
+  @keyframes qspin { to { --qa: 360deg; } }
+  @keyframes qbreath { 0%, 100% { opacity: .25; transform: scale(.99); } 50% { opacity: .45; transform: scale(1.02); } }
+  @keyframes qrglow { 0%, 100% { box-shadow: 0 0 30px rgba(0, 225, 170, .35); } 50% { box-shadow: 0 0 48px rgba(0, 225, 170, .5); } }
+
+  canvas.globe { position: absolute; pointer-events: none; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: 0s !important; } }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<script src="js/shared.js"></script>
+<script src="js/qrcode.min.js"></script>
+<script>
+const A = 'assets/scenes/';
+/* Scene recipes — bottom to top. Positions are the Figma frame positions (1920×1080). */
+const SCENES = {
+  solo: {
+    title: 'Solo Host',
+    layers: [{ img: 'solo-static' }],
+    logo: [75, 43], live: [1692, 92],
+    lowers: [{ x: 80, y: 860, s: 1, from: 'lower' }],
+    preview: [{ box: [0, 0, 1920, 1080], img: 'assets/preview/solo-host.png' }],
+  },
+  screen: {
+    title: 'Screen Share + Host',
+    layers: [{ img: 'screen-static' }],
+    logo: [75, 43], live: [1692, 92],
+    lowers: [{ x: 80, y: 945, s: 0.62, from: 'lower' }],
+    preview: [{ box: [80, 180, 1260, 709], text: 'SCREEN SHARE' }, { box: [1370, 180, 470, 709], img: 'assets/preview/host.png' }],
+  },
+  side: {
+    title: 'Side-by-Side Conversation',
+    layers: [{ img: 'side-static' }],
+    logo: [75, 43], live: [1692, 92],
+    lowers: [{ x: 80, y: 870, s: 0.66, from: 'tags.left' }, { x: 980, y: 870, s: 0.66, from: 'tags.right' }],
+    preview: [{ box: [80, 180, 860, 660], img: 'assets/preview/host.png' }, { box: [980, 180, 860, 660], img: 'assets/preview/guest.png' }],
+  },
+  give: {   // Figma "OBS Scene 07 Give" v2 (6864:2006)
+    title: 'Give',
+    layers: [
+      { fill: '#000000' },
+      { globe: { x: 1393, y: -180, size: 681 } },
+      { rainbow: { top: 585, h: 110, op: 0.3, blur: 60, stops: ['#5856d6', '#ff2d92', '#ff9500', '#30d158', '#007aff'] } },
+      { rainbow: { top: 600, h: 90, op: 0.16, blur: 70, stops: ['#ff2d92', '#ff9500', '#30d158', '#007aff', '#5856d6'], b: true } },
+      { img: 'give-fg' },
+    ],
+    logo: [75, 43], live: [1692, 92],
+    qr: { x: 1401, y: 560, size: 376, pad: 40 },
+  },
+  nextweek: {
+    title: 'See You Next Week',
+    layers: [{ img: 'ty-base' }, { img: 'ty-prism', drift: true }, { img: 'ty-fg' }],
+    logo: [75, 43],
+    preview: [{ box: [0, 0, 1920, 1080], img: 'assets/preview/solo-host.png' }],
+  },
+};
+
+const q = new URLSearchParams(location.search);
+const key = SCENES[q.get('s')] ? q.get('s') : 'solo';
+const SC = SCENES[key];
+document.title = 'Brave Life — ' + SC.title;
+const stage = document.getElementById('stage');
+const el = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return stage.appendChild(t.content.firstChild); };
+const at = (node, x, y) => { node.style.left = x + 'px'; node.style.top = y + 'px'; return node; };
+
+// preview-only camera stand-ins (never shown in OBS)
+if (q.get('preview') === '1') {
+  document.body.classList.add('preview');
+  for (const p of SC.preview || []) {
+    const [x, y, w, h] = p.box;
+    const d = at(el(`<div class="layer"></div>`), x, y);
+    Object.assign(d.style, { width: w + 'px', height: h + 'px', background: p.img ? `center/cover url(${p.img})` : '#f3f2ef', display: 'flex', alignItems: 'center', justifyContent: 'center', font: "800 80px 'Manrope'", color: '#b9b5ae' });
+    if (p.text) d.textContent = p.text;
+  }
+}
+
+for (const L of SC.layers) {
+  if (L.fill) { const d = el(`<div class="layer"></div>`); Object.assign(d.style, { width: '1920px', height: '1080px', background: L.fill }); }
+  if (L.img) el(`<img class="layer${L.drift ? ' drift' : ''}" src="${A + L.img}.png" alt="">`);
+  if (L.globe) makeGlobe(L.globe);
+  if (L.rainbow) {
+    const R = L.rainbow, r = el(`<div class="layer rainbow${R.b ? ' b' : ''}"></div>`);
+    Object.assign(r.style, { top: R.top + 'px', height: R.h + 'px', opacity: R.op });
+    if (R.blur) r.style.filter = `blur(${R.blur}px)`;
+    if (R.stops) { const s = [...R.stops, ...R.stops.slice(0, -1).reverse()]; r.style.backgroundImage = `linear-gradient(90deg, ${s.join(', ')})`; }
+    r.style.setProperty('--op', R.op);
+  }
+}
+
+/* ---------- rotating dotted globe (true 3D spin, continents from the Figma dotted world map) ---------- */
+function makeGlobe({ x, y, size }) {
+  const dpr = 1, cv = el(`<canvas class="globe"></canvas>`);
+  cv.width = size * dpr; cv.height = size * dpr;
+  Object.assign(cv.style, { left: x + 'px', top: y + 'px', width: size + 'px', height: size + 'px' });
+  const ctx = cv.getContext('2d'), R = size / 2 - 2, cx = size / 2, cy = size / 2;
+  const tilt = 18 * Math.PI / 180;            // axis tilt so it reads as a globe
+  const pts = [];
+  const img = new Image();
+  img.onload = () => {
+    const m = document.createElement('canvas'); m.width = img.width; m.height = img.height;
+    const mc = m.getContext('2d'); mc.drawImage(img, 0, 0);
+    const data = mc.getImageData(0, 0, m.width, m.height).data;
+    const land = (lon, lat) => {             // map spans ~lat +83 … -58 (dotted Miller-style map)
+      if (lat > 83 || lat < -58) return false;
+      const px = Math.floor((lon + 180) / 360 * m.width), py = Math.floor((83 - lat) / 141 * m.height);
+      // a dot covers a few pixels: look at a small neighbourhood
+      for (let dy = -3; dy <= 3; dy += 3) for (let dx = -3; dx <= 3; dx += 3) {
+        const xx = Math.min(m.width - 1, Math.max(0, px + dx)), yy = Math.min(m.height - 1, Math.max(0, py + dy));
+        if (data[(yy * m.width + xx) * 4 + 3] > 60) return true;
+      }
+      return false;
+    };
+    const step = 2.9;                       // degrees between dots (matches the chunky dot look)
+    for (let lat = -58; lat <= 82; lat += step) {
+      const n = Math.max(1, Math.round(360 / step * Math.cos(lat * Math.PI / 180)));
+      for (let i = 0; i < n; i++) {
+        const lon = -180 + i * 360 / n;
+        if (land(lon, lat)) pts.push([lon * Math.PI / 180, lat * Math.PI / 180]);
+      }
+    }
+    requestAnimationFrame(draw);
+  };
+  img.src = A + 'world-dots.png';
+  const t0 = performance.now();
+  function draw(now) {
+    const rot = -0.35 + ((now - t0) / 1000) * (2 * Math.PI / 70);   // one turn every 70 s, starts on Africa/Europe
+    ctx.clearRect(0, 0, size, size);
+    // faint sphere body + rim so it reads as a ball even over black
+    const g = ctx.createRadialGradient(cx - R * .35, cy - R * .35, R * .1, cx, cy, R);
+    g.addColorStop(0, 'rgba(255,255,255,0.045)'); g.addColorStop(.8, 'rgba(255,255,255,0.015)'); g.addColorStop(1, 'rgba(255,255,255,0.0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 1.2; ctx.setLineDash([3, 5]);
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+    const ct = Math.cos(tilt), st = Math.sin(tilt);
+    for (const [lon, lat] of pts) {
+      const L = lon + rot, cl = Math.cos(lat);
+      let X = cl * Math.sin(L), Y = Math.sin(lat), Z = cl * Math.cos(L);
+      const Y2 = Y * ct - Z * st, Z2 = Y * st + Z * ct;   // tilt toward viewer
+      if (Z2 <= 0.02) continue;
+      const s = 3.6 + 4.4 * Z2;                            // dots shrink toward the edge
+      const a = 0.22 + 0.78 * Math.pow(Z2, 0.7);
+      ctx.fillStyle = `rgba(226,226,226,${a.toFixed(3)})`;
+      ctx.fillRect(cx + X * R - s / 2, cy - Y2 * R - s / 2, s, s * (0.55 + 0.45 * Z2));
+    }
+    requestAnimationFrame(draw);
+  }
+}
+if (SC.logo) at(el(`<div class="layer logo"><img class="base" src="assets/starting-soon/logo-glitch.png" alt=""><img class="r" src="assets/starting-soon/logo-glitch.png" alt=""><img class="c" src="assets/starting-soon/logo-glitch.png" alt=""></div>`), ...SC.logo);
+const lowers = (SC.lowers || []).map(cfg => {
+  const n = at(el(`<div class="layer lt"><div class="card"><div class="bar"></div><div class="txt"><div class="nm"></div><div class="rl"></div></div></div></div>`), cfg.x, cfg.y);
+  n.style.transform = `scale(${cfg.s})`;
+  return { n, cfg };
+});
+const live = SC.live ? at(el(`<div class="layer live"><div class="dot"></div><div class="lbl">LIVE</div><div class="shine"></div></div>`), ...SC.live) : null;
+let qr = null;
+if (SC.qr) {
+  const Q = SC.qr;
+  qr = at(el(`<div class="layer qr"><div class="halo"></div><div class="tile"><div class="code"></div></div><div class="ring"></div></div>`), Q.x, Q.y);
+  Object.assign(qr.style, { width: Q.size + 'px', height: Q.size + 'px' });
+  Object.assign(qr.querySelector('.code').style, { left: Q.pad + 'px', top: Q.pad + 'px', width: (Q.size - 2 * Q.pad) + 'px', height: (Q.size - 2 * Q.pad) + 'px' });
+}
+
+/* ---------- live data from the Control page ---------- */
+let S = null, lastV = -1, lastQR = '';
+const sep = s => BL.esc(s).replace(/\s*•\s*/g, '<span class="sep">•</span>');
+const setHTML = (node, h) => { if (node.innerHTML !== h) node.innerHTML = h; };
+
+function render() {
+  if (!S) return;
+  if (live) live.classList.toggle('hidden', !S.live.show);
+  for (const { n, cfg } of lowers) {
+    let person, on;
+    if (cfg.from === 'lower') { person = S.people[S.lower.person]; on = BL.lowerVisible(S.lower); }
+    else { const t = cfg.from === 'tags.left' ? S.tags.left : S.tags.right; person = S.people[t.person]; on = t.show; }
+    if (person && on) {
+      setHTML(n.querySelector('.nm'), `<b>${BL.esc(person.first)}</b> <span>${BL.esc(person.last)}</span>`);
+      setHTML(n.querySelector('.rl'), sep(person.role));
+    }
+    n.classList.toggle('on', !!(person && on));
+  }
+  if (qr && S.give && S.give.url !== lastQR) {
+    lastQR = S.give.url;
+    try {
+      const code = qrcode(0, 'M'); code.addData(lastQR); code.make();
+      qr.querySelector('.code').innerHTML = code.createSvgTag({ cellSize: 8, margin: 0, scalable: true });
+      qr.querySelectorAll('path, rect').forEach(p => { if (p.getAttribute('fill') === '#000000' || p.getAttribute('fill') === 'black') p.setAttribute('fill', '#0a0908'); });
+    } catch (e) { qr.querySelector('.code').textContent = ''; }
+  }
+}
+
+async function poll() {
+  const st = await BL.load();
+  if (st && (S === null || st.v > lastV)) { lastV = st.v; S = st; render(); }
+}
+window.addEventListener('message', e => {
+  if (e.data && e.data.type === 'bl-state') { S = BL.merge(BL.DEFAULTS, e.data.state); lastV = S.v; render(); }
+});
+document.fonts.ready.then(render);
+poll(); setInterval(poll, 300); setInterval(render, 250);   // 250ms tick handles lower-third auto-hide
+</script>
+</body>
+</html>

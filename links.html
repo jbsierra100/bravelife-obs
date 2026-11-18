@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brave Life OBS Links</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0f0e0d; --panel: #1a1918; --panel-2: #222120; --line: rgba(255,255,255,.08); --text: #f4f1ec; --muted: #a89886; --mint: #00e1aa; --mint-2: #5ffcc0; --ink: #0a0908; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 500 14px/1.45 'Manrope', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 16px 60px; }
+  h1 { margin: 0; font: 800 30px 'Kanit'; letter-spacing: .02em; }
+  h1 em { font-style: normal; color: var(--mint); }
+  .sub { color: var(--muted); margin: 6px 0 22px; }
+  .top { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+  .top a, button { cursor: pointer; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); border-radius: 10px; padding: 9px 14px; font: 800 13px 'Manrope'; text-decoration: none; white-space: nowrap; }
+  button.go, .top a.go { background: linear-gradient(135deg, var(--mint-2), var(--mint)); color: var(--ink); border: 0; }
+  input.search { flex: 1; min-width: 200px; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font: 600 14px 'Manrope'; outline: none; }
+  input.search:focus { border-color: var(--mint); }
+  h2 { font: 800 12px 'Manrope'; letter-spacing: .2em; color: var(--muted); text-transform: uppercase; margin: 26px 0 10px; }
+  .item { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 8px; }
+  .item.star { border-color: rgba(0,225,170,.45); }
+  .name { font-weight: 800; font-size: 15px; }
+  .name small { font-weight: 700; color: var(--mint); letter-spacing: .1em; margin-left: 6px; font-size: 11px; }
+  .desc { color: var(--muted); font-size: 13px; grid-column: 1; }
+  .url { grid-column: 1; font: 600 12.5px ui-monospace, Consolas, monospace; color: var(--mint-2); word-break: break-all; }
+  .acts { grid-column: 2; grid-row: 1 / span 3; display: flex; gap: 6px; }
+  .note { margin-top: 28px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; color: #d9d3cb; }
+  .note b { color: var(--text); }
+  .note ol { margin: 8px 0 0; padding-left: 20px; }
+  @media (max-width: 640px) { .item { grid-template-columns: 1fr; } .acts { grid-column: 1; grid-row: auto; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>BRAVE LIFE <em>•</em> OBS LINKS</h1>
+  <p class="sub">Lahat ng overlay links natin, nasa isang lugar. I-click ang <b>Copy</b>, tapos i-paste sa OBS → Browser Source → URL (1920 × 1080).</p>
+  <div class="top">
+    <input class="search" id="q" placeholder="Search… (hal. podcast, starting, side)">
+    <button id="copyAll">Copy all links</button>
+    <a href="control.html" class="go">Open Control page</a>
+  </div>
+  <div id="list"></div>
+
+  <div class="note">
+    <b>Para hindi na ulit-ulitin ang setup sa OBS:</b> kapag naayos mo na ang lahat ng scenes at Browser Sources, i-save mo ang buong setup.
+    <ol>
+      <li>Sa OBS menu: <b>Scene Collection → Export</b>, tapos i-save sa folder na ito (hal. <code>Brave Life OBS.json</code>).</li>
+      <li>Sa ibang laptop o pag nag-reinstall: <b>Scene Collection → Import</b>, tapos piliin ang file na yun. Balik agad lahat.</li>
+    </ol>
+    <p style="margin:10px 0 0">Paalala: gagana lang ang mga link kapag naka-on ang <b>START OVERLAYS.bat</b>.</p>
+  </div>
+</div>
+
+<script>
+/* ===== Dagdagan dito kapag may bagong overlay ===== */
+const G = 'OBS scenes — in show order (isang Browser Source bawat scene, 1920 × 1080)';
+const LINKS = [
+  { group: G, star: true, name: '1 · Starting Soon', tag: 'FULL SCENE', path: 'starting-soon.html',
+    desc: 'Buong scene, walang camera. Dumadaloy na ribbon, gumagalaw na glow, glitch logo, LIVE pill, live timer (Start/Pause sa Control).' },
+  { group: G, star: true, name: '2 · Solo Host', tag: 'CAMERA BELOW', path: 'scene.html?s=solo',
+    desc: 'Full-screen camera. Ilagay ang camera source sa ILALIM ng Browser Source. Logo, LIVE, lower third na slide-in (Control → Lower third).' },
+  { group: G, star: true, name: '3 · Screen Share + Host', tag: 'CAMERA BELOW', path: 'scene.html?s=screen',
+    desc: 'Malaking window para sa screen share (X 80, Y 180, 1260×709) + isang window para sa host (X 1370, Y 180, 470×709).' },
+  { group: G, star: true, name: '4 · Side-by-Side Conversation', tag: 'CAMERA BELOW', path: 'scene.html?s=side',
+    desc: 'Dalawang window: host (X 80, Y 180, 860×660) at guest (X 980, Y 180, 860×660). Names galing Control → Side-by-Side names.' },
+  { group: G, star: true, name: '5 · Give (QR)', tag: 'FULL SCENE', path: 'scene.html?s=give',
+    desc: 'Buong Give page (v2). Umiikot na 3D globe, malambot na dumadaloy na glow, subtle na kumikinang na QR na may manipis na tumatakbong ilaw. Palitan ang QR link sa Control → Give scene.' },
+  { group: G, star: true, name: '6 · See You Next Week', tag: 'CAMERA BELOW', path: 'scene.html?s=nextweek',
+    desc: 'Ending scene. Lumalabas ang camera sa kanang taas (doon kumakaway ang host). Glitch logo, gumagalaw na prism.' },
+
+  { group: 'Control', name: 'Control page', tag: 'DOCK', path: 'control.html', desc: 'Ilagay sa OBS → Docks → Custom Browser Docks para ma-control habang live.' },
+];
+
+// links follow wherever this page is opened from (this laptop's localhost OR the online address)
+const base = location.protocol.startsWith('http') ? new URL('.', location.href).href : 'http://localhost:7777/';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+async function copy(text, btn) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) { const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  const old = btn.textContent; btn.textContent = 'Copied ✓'; setTimeout(() => btn.textContent = old, 1300);
+}
+
+function render(filter = '') {
+  const f = filter.trim().toLowerCase();
+  let html = '', last = '';
+  LINKS.filter(l => !f || (l.name + ' ' + l.desc + ' ' + l.path + ' ' + l.group).toLowerCase().includes(f)).forEach((l, i) => {
+    if (l.group !== last) { html += `<h2>${esc(l.group)}</h2>`; last = l.group; }
+    const url = base + l.path;
+    html += `<div class="item${l.star ? ' star' : ''}">
+      <div class="name">${esc(l.name)}${l.tag ? `<small>${esc(l.tag)}</small>` : ''}</div>
+      <div class="desc">${esc(l.desc)}</div>
+      <div class="url">${esc(url)}</div>
+      <div class="acts"><a href="${esc(l.path)}" target="_blank" rel="noopener"><button>Open</button></a><button class="go" data-url="${esc(url)}">Copy</button></div>
+    </div>`;
+  });
+  document.getElementById('list').innerHTML = html || '<p class="sub">Walang tugma.</p>';
+  document.querySelectorAll('button[data-url]').forEach(b => b.onclick = () => copy(b.dataset.url, b));
+}
+document.getElementById('q').oninput = e => render(e.target.value);
+document.getElementById('copyAll').onclick = e => copy(LINKS.map(l => `${l.name}\n${base + l.path}`).join('\n\n'), e.target);
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brave Life Overlay</title>
+<meta name="viewport" content="width=1920, height=1080">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ===== Brave Life dark kit tokens (from Figma "OBS Broadcast Scenes" 6811:209) ===== */
+  :root {
+    --ink: #0a0908;
+    --white: #ffffff;
+    --mint: #00e1aa;
+    --mint-2: #5ffcc0;
+    --taupe: #a89886;
+    --taupe-2: #c8b7a3;
+    --card-top: rgba(36, 35, 33, .94);
+    --card-bot: rgba(13, 12, 11, .94);
+    --card-line: rgba(255, 255, 255, .09);
+    --shadow: 0 18px 44px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .35);
+    --ease-in: cubic-bezier(.16, .84, .24, 1);
+    --ease-out: cubic-bezier(.5, 0, .75, 0);
+  }
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  body { position: relative; font-family: 'Manrope', system-ui, sans-serif; color: var(--white); -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+
+  .el { position: absolute; }
+  .el:not(.placed) { display: none !important; }
+  .card {
+    background: linear-gradient(180deg, var(--card-top), var(--card-bot));
+    border: 1px solid var(--card-line);
+    box-shadow: var(--shadow);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  }
+
+  /* shared show/hide motion: hidden state is the default, .on is visible */
+  .anim { opacity: 0; transition: opacity .35s var(--ease-out), transform .35s var(--ease-out), clip-path .35s var(--ease-out); }
+  .anim.on { opacity: 1; transition-duration: .7s; transition-timing-function: var(--ease-in); }
+
+  /* ---------- LIVE pill ---------- */
+  .live {
+    height: 60px; padding: 0 30px 0 26px; border-radius: 30px;
+    display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(135deg, var(--mint-2), var(--mint));
+    box-shadow: 0 0 26px rgba(0, 225, 170, .45), 0 8px 22px rgba(0, 0, 0, .35);
+    color: var(--ink); font-weight: 800; font-size: 22px; letter-spacing: .22em;
+    transform: scale(.7); transform-origin: right center;
+  }
+  .live.on { transform: scale(1); }
+  .live .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--ink); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: .25 } }
+
+  /* ---------- Logo bug ---------- */
+  .logo { width: 94px; height: 94px; border-radius: 50%; overflow: hidden; transform: scale(.7); }
+  .logo.on { transform: scale(1); }
+  .logo img { width: 135px; height: 135px; margin: -20.5px; display: block; }
+
+  /* ---------- Episode chip (podcast) ---------- */
+  .episode {
+    height: 68px; padding: 0 30px 0 8px; border-radius: 34px;
+    display: flex; align-items: center; gap: 16px;
+    transform: translateY(-16px);
+  }
+  .episode.on { transform: none; }
+  .episode .mark { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; flex: none; }
+  .episode .mark img { width: 75px; height: 75px; margin: -11.5px; display: block; }
+  .episode .name { font-weight: 800; font-size: 19px; letter-spacing: .1em; white-space: nowrap; }
+  .episode .ep { font-weight: 700; font-size: 17px; letter-spacing: .14em; color: var(--taupe); white-space: nowrap; }
+
+  /* ---------- Lower third ---------- */
+  .lower {
+    border-radius: 20px; padding: 28px 46px 30px 28px;
+    display: flex; align-items: stretch; gap: 28px;
+    clip-path: inset(0 100% 0 0 round 20px);
+  }
+  .lower.on { clip-path: inset(0 0 0 0 round 20px); }
+  .lower .bar {
+    width: 6px; border-radius: 3px; flex: none;
+    background: linear-gradient(180deg, var(--mint-2), var(--mint));
+    box-shadow: 0 0 14px rgba(0, 225, 170, .75);
+    transform: scaleY(0); transition: transform .3s var(--ease-out);
+  }
+  .lower.on .bar { transform: scaleY(1); transition: transform .6s var(--ease-in) .25s; }
+  .lower .txt > * { opacity: 0; transform: translateX(-18px); transition: opacity .25s, transform .25s; }
+  .lower.on .txt > * { opacity: 1; transform: none; transition: opacity .6s var(--ease-in), transform .6s var(--ease-in); }
+  .lower.on .txt .nm { transition-delay: .3s; }
+  .lower.on .txt .rl { transition-delay: .45s; }
+  .lower .nm { font-size: 46px; line-height: 1.05; letter-spacing: -.005em; white-space: nowrap; }
+  .lower .nm b { font-weight: 800; } .lower .nm span { font-weight: 400; }
+  .lower .rl { margin-top: 12px; font-weight: 600; font-size: 21px; letter-spacing: .2em; color: var(--taupe-2); white-space: nowrap; }
+  .sep { display: inline-block; margin: 0 .7em; }
+
+  /* ---------- Name tag (podcast) ---------- */
+  .tag {
+    height: 60px; padding: 0 26px 0 22px; border-radius: 30px;
+    display: flex; align-items: center; gap: 12px; white-space: nowrap;
+    transform: translateY(18px); transform-origin: left top;
+  }
+  .tag.on { transform: none; }
+  .tag.small { transform: translateY(18px) scale(.787); }
+  .tag.small.on { transform: scale(.787); }
+  .tag .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 10px rgba(0, 225, 170, .9); flex: none; }
+  .tag .nm { font-size: 22px; letter-spacing: .02em; }
+  .tag .nm b { font-weight: 800; } .tag .nm span { font-weight: 500; }
+  .tag .rl { font-weight: 700; font-size: 14px; letter-spacing: .2em; color: var(--taupe); margin-left: 4px; }
+
+  /* ---------- Now Discussing (podcast) ---------- */
+  .topic {
+    height: 67px; padding: 0 30px; border-radius: 34px;
+    display: flex; align-items: center; gap: 18px; white-space: nowrap;
+    transform: translateX(-30px);
+  }
+  .topic.on { transform: none; }
+  .topic .lb { font-weight: 800; font-size: 16px; letter-spacing: .22em; color: var(--mint); flex: none; }
+  .topic .win { position: relative; height: 40px; overflow: hidden; transition: width .55s var(--ease-in); }
+  .topic .tx { position: absolute; left: 0; top: 0; line-height: 40px; font-weight: 700; font-size: 27px; transition: transform .55s var(--ease-in), opacity .45s; }
+  .topic .tx.enter { transform: translateY(100%); opacity: 0; }
+  .topic .tx.leave { transform: translateY(-100%); opacity: 0; }
+  .measure { position: absolute; visibility: hidden; white-space: nowrap; font-weight: 700; font-size: 27px; }
+
+  /* ---------- Countdown (Starting Soon) ---------- */
+  .countdown {
+    width: 400px; height: 120px; border-radius: 60px;
+    display: flex; align-items: center; justify-content: center; gap: 20px;
+    background: linear-gradient(180deg, rgba(0, 225, 170, .26), rgba(0, 225, 170, .08));
+    border: 1.5px solid rgba(95, 252, 192, .55);
+    box-shadow: 0 0 44px rgba(0, 225, 170, .32), inset 0 0 22px rgba(95, 252, 192, .14);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    transform: scale(.85);
+  }
+  .countdown.on { transform: none; }
+  .countdown .lb { font-weight: 600; font-size: 22px; letter-spacing: .26em; color: #b8eedb; white-space: nowrap; }
+  .countdown .tm { font-family: 'Kanit', 'Manrope', sans-serif; font-weight: 600; font-size: 66px; line-height: 1; display: flex; }
+  .countdown .tm i { font-style: normal; display: inline-block; width: .6em; text-align: center; }
+  .countdown .tm i.c { width: .3em; }
+  .countdown .done { font-weight: 800; font-size: 30px; letter-spacing: .14em; white-space: nowrap; }
+  .countdown.zero { animation: glow 1.4s ease-in-out infinite; }
+  @keyframes glow { 50% { box-shadow: 0 0 70px rgba(0, 225, 170, .6), inset 0 0 26px rgba(95, 252, 192, .25); } }
+
+  /* ---------- Info / CTA card ---------- */
+  .cta { border-radius: 20px; padding: 30px 40px 32px; min-width: 460px; transform: translateY(24px); }
+  .cta.on { transform: none; }
+  .cta .lb { font-weight: 600; font-size: 20px; letter-spacing: .2em; color: var(--taupe); }
+  .cta .vl { margin-top: 8px; font-weight: 800; font-size: 34px; white-space: nowrap; }
+
+  /* ---------- preview backgrounds (only with ?preview=1, never in OBS) ---------- */
+  .pv { position: absolute; display: none; background-size: cover; background-position: center; }
+  body.preview .pv.show { display: block; }
+  .pv.ss { background: #f3f2ef; display: none; color: #b9b5ae; font: 800 90px 'Kanit'; align-items: center; justify-content: center; }
+  body.preview .pv.ss.show { display: flex; }
+</style>
+</head>
+<body>
+  <!-- preview-only backgrounds -->
+  <div class="pv" id="pv-full"></div>
+  <div class="pv ss" id="pv-ss">SCREEN SHARE</div>
+  <div class="pv" id="pv-a"></div>
+  <div class="pv" id="pv-b"></div>
+
+  <div class="el anim live" id="live"><div class="dot"></div><div>LIVE</div></div>
+  <div class="el anim logo" id="logo"><img src="assets/logo-bug.png" alt=""></div>
+  <div class="el anim card episode" id="episode"><div class="mark"><img src="assets/logo-bug.png" alt=""></div><div class="name"></div><div class="ep"></div></div>
+  <div class="el anim card lower" id="lower"><div class="bar"></div><div class="txt"><div class="nm"></div><div class="rl"></div></div></div>
+  <div class="el anim card tag" id="tagL"><div class="dot"></div><div class="nm"></div><div class="rl"></div></div>
+  <div class="el anim card tag" id="tagR"><div class="dot"></div><div class="nm"></div><div class="rl"></div></div>
+  <div class="el anim card topic" id="topic"><div class="lb"></div><div class="win"></div></div>
+  <div class="el anim countdown" id="countdown"><div class="lb"></div><div class="tm"></div></div>
+  <div class="el anim card cta" id="cta"><div class="lb"></div><div class="vl"></div></div>
+  <span class="measure" id="measure"></span>
+
+<script src="js/shared.js"></script>
+<script>
+/* ============================================================
+   LAYOUTS — positions copied from the Figma scenes (1920x1080).
+   Use in OBS:  overlay.html?layout=solo   (see README)
+   ============================================================ */
+const LAYOUTS = {
+  // OBS Broadcast Scenes (dark) — Main Cam / Slides + Cam
+  broadcast: { logo: { left: 80, top: 70 }, live: { right: 80, top: 92 }, lower: { left: 80, top: 860 },
+               topic: { left: 200, top: 84 }, cta: { right: 80, bottom: 70 } },
+  // Starting Soon — countdown sits where the "LIVE IN 05:00" pill is in Scene 01
+  starting:  { countdown: { left: 760, top: 770 } },
+  'starting-podcast': { countdown: { left: 761, top: 680 }, episode: { left: 40, top: 36 } },
+  // OBS Podcast Scenes — 5 Essentials
+  solo:      { episode: { left: 40, top: 36 }, live: { right: 40, top: 40 }, lower: { left: 40, top: 880 },
+               topic: { right: 40, bottom: 40 } },
+  side:      { episode: { left: 40, top: 36 }, live: { right: 40, top: 40 },
+               tagL: { left: 64, top: 866 }, tagR: { left: 999, top: 866 }, topic: { left: 40, top: 980 } },
+  screen:    { episode: { left: 40, top: 36 }, live: { right: 40, top: 40 },
+               tagL: { left: 1466, top: 445, small: true }, tagR: { left: 1466, top: 843, small: true },
+               topic: { left: 40, top: 945 } },
+  outro:     { episode: { left: 40, top: 36 }, tagL: { left: 1064, top: 589 }, cta: { left: 1040, top: 761 } }
+};
+const PREVIEW_BG = {
+  broadcast: { full: 'assets/preview/solo-host.png' },
+  solo:      { full: 'assets/preview/solo-host.png' },
+  starting:  { full: 'assets/preview/crowd-dark.png', dark: true },
+  'starting-podcast': { full: 'assets/preview/crowd-dark.png', dark: true },
+  side:      { a: [40, 130, 905, 820, 'assets/preview/host.png'], b: [975, 130, 905, 820, 'assets/preview/guest.png'] },
+  screen:    { ss: [40, 130, 1380, 776], a: [1450, 130, 430, 378, 'assets/preview/host.png'], b: [1450, 528, 430, 378, 'assets/preview/guest.png'] },
+  outro:     { a: [1040, 200, 840, 473, 'assets/preview/host.png'] }
+};
+
+const q = new URLSearchParams(location.search);
+const layoutName = LAYOUTS[q.get('layout')] ? q.get('layout') : 'solo';
+const L = LAYOUTS[layoutName];
+const $ = id => document.getElementById(id);
+
+// place elements for this layout
+for (const [id, pos] of Object.entries(L)) {
+  const el = $(id); if (!el) continue;
+  el.classList.add('placed');
+  for (const k of ['left', 'right', 'top', 'bottom']) if (pos[k] != null) el.style[k] = pos[k] + 'px';
+  if (pos.small) el.classList.add('small');
+  if (pos.right != null) el.style.transformOrigin = 'right center';
+}
+
+// preview backgrounds
+if (q.get('preview') === '1') {
+  document.body.classList.add('preview');
+  const bg = PREVIEW_BG[layoutName] || {};
+  document.documentElement.style.background = bg.dark ? '#0a0908' : '#1a1918';
+  if (bg.full) { const f = $('pv-full'); Object.assign(f.style, { inset: 0, backgroundImage: `url(${bg.full})` }); f.classList.add('show'); }
+  const box = (el, [x, y, w, h, img]) => { Object.assign(el.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' }); if (img) el.style.backgroundImage = `url(${img})`; el.classList.add('show'); };
+  if (bg.ss) box($('pv-ss'), bg.ss);
+  if (bg.a) box($('pv-a'), bg.a);
+  if (bg.b) box($('pv-b'), bg.b);
+}
+
+const sep = s => BL.esc(s).replace(/\s*•\s*/g, '<span class="sep">•</span>');
+const nameHTML = p => `<b>${BL.esc(p.first)}</b> <span>${BL.esc(p.last)}</span>`;
+const set = (el, on) => el.classList.toggle('on', !!on);
+const html = (el, h) => { if (el.innerHTML !== h) el.innerHTML = h; };
+
+let S = null, lastTopic = null;
+
+function setTopic(text) {
+  const win = $('topic').querySelector('.win');
+  const m = $('measure'); m.textContent = text;
+  const w = Math.ceil(m.getBoundingClientRect().width) + 4 + 'px';
+  if (win.style.width !== w) win.style.width = w;
+  if (lastTopic === null) { win.innerHTML = `<div class="tx">${BL.esc(text)}</div>`; lastTopic = text; return; }
+  if (text === lastTopic) return;
+  lastTopic = text;
+  win.querySelectorAll('.tx').forEach(old => { old.classList.add('leave'); setTimeout(() => old.remove(), 600); });
+  const nx = document.createElement('div'); nx.className = 'tx enter'; nx.textContent = text; win.appendChild(nx);
+  requestAnimationFrame(() => requestAnimationFrame(() => nx.classList.remove('enter')));
+}
+
+function render() {
+  if (!S) return;
+  const P = i => S.people[i] || { first: '', last: '', role: '', tag: '' };
+
+  set($('live'), S.live.show);
+  set($('logo'), S.logo.show);
+
+  const ep = $('episode');
+  html(ep.querySelector('.name'), BL.esc(S.episode.name));
+  html(ep.querySelector('.ep'), BL.esc(S.episode.ep));
+  set(ep, S.episode.show);
+
+  // lower third: keep old text while it animates out
+  const lw = $('lower'), lv = BL.lowerVisible(S.lower);
+  if (lv) {
+    const p = P(S.lower.person);
+    html(lw.querySelector('.nm'), nameHTML(p));
+    html(lw.querySelector('.rl'), sep(p.role));
+  }
+  set(lw, lv);
+
+  for (const [id, key] of [['tagL', 'left'], ['tagR', 'right']]) {
+    const t = S.tags[key], el = $(id), p = P(t.person);
+    html(el.querySelector('.nm'), nameHTML(p));
+    html(el.querySelector('.rl'), BL.esc(p.tag));
+    set(el, t.show);
+  }
+
+  const tp = $('topic');
+  html(tp.querySelector('.lb'), BL.esc(S.topic.label));
+  if (S.topic.show || lastTopic === null) setTopic(S.topic.text);
+  set(tp, S.topic.show);
+
+  const cta = $('cta');
+  html(cta.querySelector('.lb'), BL.esc(S.cta.label));
+  html(cta.querySelector('.vl'), BL.esc(S.cta.value));
+  set(cta, S.cta.show);
+
+  renderCountdown();
+}
+
+function renderCountdown() {
+  if (!S) return;
+  const c = S.countdown, el = $('countdown');
+  const ms = BL.remainingMs(c), zero = ms <= 0 && (c.running || c.remainingMs <= 0);
+  html(el.querySelector('.lb'), zero && c.doneText ? '' : BL.esc(c.label));
+  el.querySelector('.lb').style.display = zero && c.doneText ? 'none' : '';
+  const tm = el.querySelector('.tm');
+  if (zero && c.doneText) html(tm, `<span class="done">${BL.esc(c.doneText)}</span>`);
+  else html(tm, BL.fmt(ms).split('').map(ch => ch === ':' ? '<i class="c">:</i>' : `<i>${ch}</i>`).join(''));
+  el.classList.toggle('zero', zero);
+  set(el, c.show);
+}
+
+// receive state: from the local server (OBS) or straight from the control page preview
+let lastV = -1;
+async function poll() {
+  const st = await BL.load();
+  if (st && (S === null || st.v > lastV)) { lastV = st.v; S = st; render(); }
+}
+window.addEventListener('message', e => {
+  if (e.data && e.data.type === 'bl-state') { S = BL.merge(BL.DEFAULTS, e.data.state); lastV = S.v; render(); }
+});
+
+document.fonts.ready.then(render);
+document.fonts.addEventListener('loadingdone', render);   // re-measure pills once the real fonts arrive
+poll();
+setInterval(poll, 300);
+setInterval(() => { renderCountdown(); if (S && S.lower.show && S.lower.autoHide) set($('lower'), BL.lowerVisible(S.lower)); }, 200);
+</script>
+</body>
+</html>

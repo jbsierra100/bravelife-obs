@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brave Life — Starting Soon (Live Scene)</title>
+<meta name="viewport" content="width=1920, height=1080">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;800&family=Manrope:wght@800&display=swap" rel="stylesheet">
+<style>
+  /* Full animated scene from Figma "OBS Scene 01 Starting Soon" (node 6843:1694).
+     Layer order (bottom → top): base bg · rainbow glow · prism · static text · ribbon · logo · timer */
+  :root { --mint: #00e1aa; --mint-2: #5ffcc0; }
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #0a0908; }
+  body { position: relative; font-family: 'Kanit', sans-serif; -webkit-font-smoothing: antialiased; }
+  .layer { position: absolute; left: 0; top: 0; pointer-events: none; }
+  img.layer { display: block; }
+
+  /* ---------- moving background glow ---------- */
+  .rainbow {
+    left: -300px; top: 700px; width: 2520px; height: 170px; opacity: .32;
+    filter: blur(90px);
+    background: linear-gradient(90deg,
+      #5856d6 0%, #af52de 6%, #ff2d92 12.5%, #ff6482 18.5%, #ff9500 25%, #ffd60a 31%, #30d158 37.5%, #40cbf0 43.5%, #007aff 50%,
+      #40cbf0 56.5%, #30d158 62.5%, #ffd60a 69%, #ff9500 75%, #ff6482 81.5%, #ff2d92 87.5%, #af52de 94%, #5856d6 100%);
+    background-size: 200% 100%;
+    animation: hueflow 26s linear infinite, breathe 7s ease-in-out infinite, sway 19s ease-in-out infinite;
+  }
+  @keyframes hueflow { from { background-position: 0% 0; } to { background-position: -200% 0; } }
+  @keyframes breathe { 0%, 100% { opacity: .26; } 50% { opacity: .4; } }
+  @keyframes sway { 0%, 100% { transform: translate(0, 0) scaleY(1); } 50% { transform: translate(110px, -24px) scaleY(1.25); } }
+
+  .prism {
+    top: 520px; width: 1920px; height: 560px; transform-origin: 50% 70%;
+    animation: drift 16s ease-in-out infinite, prismfade 9s ease-in-out infinite;
+  }
+  @keyframes drift {
+    0%, 100% { transform: scale(1.12) translate(-60px, 0); }
+    50%      { transform: scale(1.16) translate(60px, -14px); }
+  }
+  @keyframes prismfade { 0%, 100% { opacity: .85; } 50% { opacity: 1.15; filter: saturate(1.25); } }
+
+  /* ---------- flowing ribbon (caution tape) ---------- */
+  .tape {
+    left: 959.87px; top: -202px; width: 1508px; height: 59px;
+    transform-origin: 0 0; transform: rotate(32.6967deg);
+    background: #fff; overflow: hidden;
+    box-shadow: 0 6px 13.8px rgba(0, 0, 0, .19);
+  }
+  .tape .band {
+    position: absolute; left: 0; top: 5px; width: 100%; height: 49px; overflow: hidden;
+    background: linear-gradient(90deg, #a89886 12.9%, #423b35 47.9%);
+  }
+  .tape .track {
+    position: absolute; top: 0; left: 0; height: 49px; display: flex; white-space: nowrap;
+    animation: ribbon 14s linear infinite; will-change: transform;
+  }
+  .tape .seg {
+    font-weight: 500; font-size: 36px; letter-spacing: .26em; color: #fff;
+    line-height: 49px; padding-right: .26em;
+  }
+  .tape .seg i { font-style: normal; display: inline-block; margin: 0 .55em; }
+  @keyframes ribbon { from { transform: translateX(0); } to { transform: translateX(var(--seg, -600px)); } }
+
+  /* ---------- glitch logo (subtle but visible) ---------- */
+  .logo { left: 75px; top: 90px; width: 117px; height: 117px; }
+  .logo img { position: absolute; inset: 0; width: 117px; height: 117px; display: block; }
+  .logo .base { animation: rgbshift 3.2s steps(1) infinite, jolt 5s infinite; }
+  .logo .r, .logo .c { opacity: 0; mix-blend-mode: screen; }
+  .logo .r { filter: drop-shadow(-4px 0 0 rgba(255, 30, 90, .9)) saturate(1.4); animation: sliceA 5s infinite; }
+  .logo .c { filter: drop-shadow(4px 0 0 rgba(0, 220, 255, .9)) saturate(1.4); animation: sliceB 5s infinite; }
+  @keyframes rgbshift {
+    0%   { filter: drop-shadow(1px 0 0 rgba(255, 30, 90, .35)) drop-shadow(-1px 0 0 rgba(0, 220, 255, .35)); }
+    50%  { filter: drop-shadow(-1px 0 0 rgba(255, 30, 90, .35)) drop-shadow(1px 0 0 rgba(0, 220, 255, .35)); }
+  }
+  @keyframes jolt {
+    0%, 84%, 100% { transform: none; }
+    85% { transform: translateX(-3px) skewX(-6deg); }
+    86% { transform: translateX(3px); }
+    87% { transform: translateX(-1px) skewX(4deg); }
+    88% { transform: none; }
+    93% { transform: translateX(2px); }
+    94% { transform: none; }
+  }
+  @keyframes sliceA {
+    0%, 84%, 95%, 100% { opacity: 0; clip-path: inset(0 0 100% 0); transform: none; }
+    85% { opacity: 1; clip-path: inset(18% 0 58% 0); transform: translateX(-7px); }
+    86% { clip-path: inset(62% 0 14% 0); transform: translateX(6px); }
+    87% { clip-path: inset(38% 0 40% 0); transform: translateX(-4px); }
+    88% { opacity: 0; }
+    92% { opacity: 1; clip-path: inset(74% 0 8% 0); transform: translateX(5px); }
+    93% { clip-path: inset(8% 0 80% 0); transform: translateX(-3px); }
+  }
+  @keyframes sliceB {
+    0%, 84%, 95%, 100% { opacity: 0; clip-path: inset(0 0 100% 0); transform: none; }
+    85% { opacity: 1; clip-path: inset(48% 0 30% 0); transform: translateX(6px); }
+    86% { clip-path: inset(10% 0 72% 0); transform: translateX(-5px); }
+    87% { clip-path: inset(70% 0 12% 0); transform: translateX(4px); }
+    88% { opacity: 0; }
+    92% { opacity: 1; clip-path: inset(30% 0 52% 0); transform: translateX(-6px); }
+    93% { clip-path: inset(56% 0 26% 0); transform: translateX(3px); }
+  }
+
+  /* ---------- timer pill ---------- */
+  .timer {
+    left: 960px; top: 785px; height: 120px; min-width: 247px; padding: 0 46px;
+    transform: translateX(-50%);
+    border-radius: 100px; border: 2px solid rgba(0, 225, 170, .6);
+    background: linear-gradient(180deg, rgba(0, 225, 170, .22), rgba(0, 225, 170, .12)), rgba(255, 255, 255, .05);
+    -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+    box-shadow: 0 0 40px rgba(0, 225, 170, .45), inset 0 0 18px rgba(95, 252, 192, .12);
+    display: flex; align-items: center; justify-content: center; gap: 18px;
+    transition: opacity .5s, transform .5s;
+  }
+  .timer.running { animation: pillglow 2.4s ease-in-out infinite; }
+  .timer.zero { animation: pillglow .9s ease-in-out infinite; }
+  .timer.hidden { opacity: 0; transform: translateX(-50%) scale(.9); }
+  @keyframes pillglow {
+    0%, 100% { box-shadow: 0 0 34px rgba(0, 225, 170, .38), inset 0 0 16px rgba(95, 252, 192, .1); }
+    50%      { box-shadow: 0 0 64px rgba(0, 225, 170, .62), inset 0 0 24px rgba(95, 252, 192, .22); }
+  }
+  .timer .lb { font-weight: 500; font-size: 22px; letter-spacing: .26em; color: #b8eedb; white-space: nowrap; display: none; }
+  .timer .lb.on { display: block; }
+  .digits { display: flex; font-weight: 800; font-size: 56px; line-height: 84px; color: #fff; height: 84px; }
+  .d { position: relative; width: .6em; height: 84px; overflow: hidden; text-align: center; }
+  .d span { position: absolute; left: 0; right: 0; top: 0; transition: transform .45s cubic-bezier(.2, .8, .2, 1), opacity .45s; }
+  .d span.in { transform: translateY(70%); opacity: 0; }
+  .d span.out { transform: translateY(-70%); opacity: 0; }
+  .colon { width: .3em; text-align: center; transform: translateY(-3px); }
+  .timer.running .colon { animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: .35; } }
+  .done { font-weight: 800; font-size: 40px; letter-spacing: .08em; color: #fff; white-space: nowrap; }
+
+  /* ---------- LIVE pill (Figma "OBS / Live Pill" 6849:1758) ---------- */
+  .live {
+    left: 1692px; top: 92px; width: 148px; height: 60px; border-radius: 100px; overflow: hidden;
+    background: linear-gradient(90deg, #5ffcc0, #00e1aa);
+    box-shadow: 0 0 32px rgba(0, 225, 170, .55);
+    animation: liveglow 2.6s ease-in-out infinite;
+    transition: opacity .45s, transform .45s cubic-bezier(.2, .8, .2, 1);
+    transform-origin: right center;
+  }
+  .live.hidden { opacity: 0; transform: scale(.7); }
+  .live .dot { position: absolute; left: 24px; top: 23px; width: 14px; height: 14px; border-radius: 50%; background: #0a0908; animation: livedot 1.3s ease-in-out infinite; }
+  .live .lbl { position: absolute; left: 50px; top: 12px; height: 36px; line-height: 36px; font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 26px; letter-spacing: .2em; color: #0a0908; }
+  .live .shine { position: absolute; top: 0; bottom: 0; width: 60px; left: -80px; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .65), transparent); animation: shine 4.5s ease-in-out infinite; }
+  @keyframes livedot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .25; transform: scale(.75); } }
+  @keyframes liveglow { 0%, 100% { box-shadow: 0 0 26px rgba(0, 225, 170, .45); } 50% { box-shadow: 0 0 44px rgba(0, 225, 170, .75); } }
+  @keyframes shine { 0%, 70% { left: -80px; } 90%, 100% { left: 170px; } }
+
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: 0s !important; } }
+</style>
+</head>
+<body>
+  <img class="layer" src="assets/starting-soon/bg-base.png" width="1920" height="1080" alt="">
+  <div class="layer rainbow"></div>
+  <img class="layer prism" src="assets/starting-soon/prism.png" alt="">
+  <img class="layer" src="assets/starting-soon/fg-static.png" width="1920" height="1080" alt="">
+
+  <div class="layer tape"><div class="band"><div class="track" id="track"></div></div></div>
+
+  <div class="layer logo">
+    <img class="base" src="assets/starting-soon/logo-glitch.png" alt="">
+    <img class="r" src="assets/starting-soon/logo-glitch.png" alt="">
+    <img class="c" src="assets/starting-soon/logo-glitch.png" alt="">
+  </div>
+
+  <div class="layer live" id="live"><div class="dot"></div><div class="lbl">LIVE</div><div class="shine"></div></div>
+
+  <div class="layer timer" id="timer"><div class="lb" id="lb"></div><div class="digits" id="digits"></div></div>
+
+<script src="js/shared.js"></script>
+<script>
+const q = new URLSearchParams(location.search);
+const RIBBON_TEXT = (q.get('ribbon') || 'LIVE • BRAVE LIFE').split('•').map(s => s.trim()).filter(Boolean);
+
+/* ---- ribbon: repeat one segment enough times, then slide by exactly one segment = seamless loop ---- */
+function buildRibbon() {
+  const track = document.getElementById('track');
+  const segHTML = RIBBON_TEXT.map(t => `${BL.esc(t)}<i>•</i>`).join('');
+  track.innerHTML = `<span class="seg">${segHTML}</span>`;
+  const w = track.firstChild.getBoundingClientRect().width;
+  const copies = Math.ceil(1508 / w) + 2;
+  track.innerHTML = Array.from({ length: copies }, () => `<span class="seg">${segHTML}</span>`).join('');
+  track.style.setProperty('--seg', `-${w}px`);
+  track.style.animationDuration = (w / 70) + 's';   // ~70px per second
+}
+
+/* ---- timer (same countdown as the control page) ---- */
+let S = null, shown = '';
+function setDigits(str) {
+  const box = document.getElementById('digits');
+  if (box.dataset.fmt !== String(str.length)) {           // rebuild if mm:ss <-> h:mm:ss
+    box.dataset.fmt = String(str.length);
+    box.innerHTML = str.split('').map(ch => ch === ':' ? '<div class="colon">:</div>' : `<div class="d"><span>${ch}</span></div>`).join('');
+    shown = str; return;
+  }
+  const cells = box.querySelectorAll('.d'); let k = 0;
+  str.split('').forEach((ch, i) => {
+    if (ch === ':') return;
+    const cell = cells[k++];
+    if (shown[i] === ch) return;
+    const old = cell.querySelector('span:last-child');
+    const nx = document.createElement('span'); nx.textContent = ch; nx.className = 'in';
+    cell.appendChild(nx);
+    requestAnimationFrame(() => requestAnimationFrame(() => { nx.className = ''; if (old) old.className = 'out'; }));
+    setTimeout(() => old && old.remove(), 500);
+  });
+  shown = str;
+}
+function renderTimer() {
+  if (!S) return;
+  document.getElementById('live').classList.toggle('hidden', !S.live.show);
+  const c = S.countdown, el = document.getElementById('timer');
+  const ms = BL.remainingMs(c);
+  const zero = ms <= 0;
+  el.classList.toggle('hidden', !c.show);
+  el.classList.toggle('running', c.running && !zero);
+  el.classList.toggle('zero', zero && (c.running || c.remainingMs <= 0));
+  const lb = document.getElementById('lb');
+  const labelOn = q.get('label') === '1' && !(zero && c.doneText);
+  lb.classList.toggle('on', labelOn); lb.textContent = c.label;
+  if (zero && c.doneText) {
+    const d = document.getElementById('digits');
+    if (d.dataset.fmt !== 'done') { d.dataset.fmt = 'done'; d.innerHTML = `<span class="done">${BL.esc(c.doneText)}</span>`; shown = ''; }
+  } else setDigits(BL.fmt(ms));
+}
+
+let lastV = -1;
+async function poll() {
+  const st = await BL.load();
+  if (st && (S === null || st.v > lastV)) { lastV = st.v; S = st; renderTimer(); }
+}
+window.addEventListener('message', e => {
+  if (e.data && e.data.type === 'bl-state') { S = BL.merge(BL.DEFAULTS, e.data.state); lastV = S.v; renderTimer(); }
+});
+
+document.fonts.ready.then(buildRibbon);
+buildRibbon();
+poll(); setInterval(poll, 300); setInterval(renderTimer, 100);
+</script>
+</body>
+</html>
