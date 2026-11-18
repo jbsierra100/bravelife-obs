@@ -130,6 +130,10 @@
 
   canvas.globe { position: absolute; pointer-events: none; }
 
+  /* ---------- slow continuous ticker (e.g. "BRAVELIFE • BRAVELIFE •" under the host) ---------- */
+  .ticker { overflow: hidden; }
+  .ticker .strip { position: absolute; left: 0; top: 0; height: 100%; background-repeat: repeat-x; will-change: transform; }
+
   @media (prefers-reduced-motion: reduce) { * { animation-duration: 0s !important; } }
 </style>
 </head>
@@ -142,11 +146,16 @@
 const A = 'assets/scenes/';
 /* Scene recipes — bottom to top. Positions are the Figma frame positions (1920×1080). */
 const SCENES = {
-  solo: {
+  solo: {   // Figma "OBS Scene 02 — Main Cam" (6825:531)
     title: 'Solo Host',
-    layers: [{ img: 'solo-static' }],
+    layers: [
+      { img: 'solo-static' },
+      // "bravelife flowing" ticker: starts at x 566 (right of the lower third), one 650px period,
+      // flowing left slowly (~16 px/s) and fading in at its left edge
+      { ticker: { x: 566, y: 886, h: 90, tile: 'solo-ticker-tile', tw: 650, secs: 40, fade: 140 } },
+    ],
     logo: [75, 43], live: [1692, 92],
-    lowers: [{ x: 80, y: 860, s: 1, from: 'lower' }],
+    lowers: [{ x: 80, y: 854, s: 1, from: 'lower' }],
     preview: [{ box: [0, 0, 1920, 1080], img: 'assets/preview/solo-host.png' }],
   },
   screen: {
@@ -206,6 +215,19 @@ for (const L of SC.layers) {
   if (L.fill) { const d = el(`<div class="layer"></div>`); Object.assign(d.style, { width: '1920px', height: '1080px', background: L.fill }); }
   if (L.img) el(`<img class="layer${L.drift ? ' drift' : ''}" src="${A + L.img}.png" alt="">`);
   if (L.globe) makeGlobe(L.globe);
+  if (L.ticker) {
+    const K = L.ticker, t = el(`<div class="layer ticker"><div class="strip"></div></div>`);
+    const x0 = K.x || 0;
+    Object.assign(t.style, { left: x0 + 'px', top: K.y + 'px', width: (1920 - x0) + 'px', height: K.h + 'px' });
+    if (K.fade) { const m = `linear-gradient(90deg, transparent 0, #000 ${K.fade}px)`; t.style.webkitMaskImage = m; t.style.maskImage = m; }
+    const s = t.firstChild;
+    // tile starts exactly where the Figma ticker starts (x0), then loops one period to the left
+    Object.assign(s.style, { left: '0px', width: (1920 - x0 + 2 * K.tw) + 'px', backgroundImage: `url(${A + K.tile}.png)`, backgroundSize: `${K.tw}px ${K.h}px` });
+    // move left forever, wrapping every tile (seamless because the tile repeats). Frame-driven = smooth + reliable in OBS.
+    const speed = K.tw / K.secs, t0 = performance.now();
+    const step = now => { const x = ((now - t0) / 1000 * speed) % K.tw; s.style.transform = `translate3d(${-x.toFixed(2)}px,0,0)`; requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
   if (L.rainbow) {
     const R = L.rainbow, r = el(`<div class="layer rainbow${R.b ? ' b' : ''}"></div>`);
     Object.assign(r.style, { top: R.top + 'px', height: R.h + 'px', opacity: R.op });
