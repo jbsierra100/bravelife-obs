@@ -165,6 +165,8 @@
   .chat .who { font-weight: 800; font-size: 17px; line-height: 22px; color: #fff; display: flex; align-items: center; gap: 8px; }
   .chat .who em { font-style: normal; font-weight: 800; font-size: 11px; letter-spacing: .16em; padding: 2px 8px; border-radius: 99px; background: var(--mint); color: var(--ink); }
   .chat .txt { font-weight: 500; font-size: 19px; line-height: 26px; color: #e9e3da; overflow-wrap: anywhere; }
+  .chat .txt .emote { height: 24px; vertical-align: -5px; margin: 0 1px; }
+  .chat .pf { font-style: normal; font-weight: 800; font-size: 10px; letter-spacing: .08em; padding: 2px 6px; border-radius: 6px; color: #fff; }
 
   /* ---------- slow continuous ticker (e.g. "BRAVELIFE • BRAVELIFE •" under the host) ---------- */
   .ticker { overflow: hidden; }
@@ -341,13 +343,74 @@ const lowers = (SC.lowers || []).map(cfg => {
   return { n, cfg };
 });
 
-/* ---------- live chat: ?chat=demo shows sample messages so Troy can see how it will look ---------- */
-if (SC.chat && q.get('chat') === 'demo') {
+/* ---------- live chat ----------
+   ?chat=demo  → sample messages (preview only)
+   otherwise   → REAL chat from YouTube / Facebook / etc. via Social Stream Ninja (SSN):
+                 the session ID comes from the Control page (or ?session=…). */
+const COLORS = ['#5ffcc0', '#00e1aa', '#c8b7a3', '#a89886', '#9ee8ff', '#ffd39a', '#d7b9ff'];
+const initials = n => String(n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+const PLATFORM = { youtube: ['YT', '#ff3b30'], youtubeshorts: ['YT', '#ff3b30'], facebook: ['FB', '#1877f2'], instagram: ['IG', '#e1306c'], instagramlive: ['IG', '#e1306c'], tiktok: ['TT', '#25f4ee'], twitch: ['TW', '#9146ff'], kick: ['K', '#53fc18'] };
+let chatBox = null, chatList = null;
+function chatPanel() {
+  if (chatBox) return chatList;
   const C = SC.chat;
-  const box = at(el(`<div class="layer chat"><div class="head"><i></i>LIVE CHAT</div><div class="list"></div></div>`), C.x, C.y);
-  Object.assign(box.style, { width: C.w + 'px', height: C.h + 'px' });
-  const list = box.querySelector('.list');
-  const COLORS = ['#5ffcc0', '#00e1aa', '#c8b7a3', '#a89886', '#9ee8ff', '#ffd39a', '#d7b9ff'];
+  chatBox = at(el(`<div class="layer chat"><div class="head"><i></i>LIVE CHAT</div><div class="list"></div></div>`), C.x, C.y);
+  Object.assign(chatBox.style, { width: C.w + 'px', height: C.h + 'px' });
+  chatList = chatBox.querySelector('.list');
+  return chatList;
+}
+// keep text + emoji (and platform emote images), drop any other HTML
+function cleanMessage(html) {
+  const doc = new DOMParser().parseFromString(`<div>${html || ''}</div>`, 'text/html');
+  let out = '';
+  (function walk(n) {
+    for (const c of n.childNodes) {
+      if (c.nodeType === 3) out += BL.esc(c.textContent);
+      else if (c.nodeName === 'IMG' && /^https:\/\//.test(c.getAttribute('src') || '')) out += `<img class="emote" src="${BL.esc(c.getAttribute('src'))}" alt="">`;
+      else if (c.nodeType === 1) walk(c);
+    }
+  })(doc.body.firstChild);
+  return out.trim();
+}
+function addChat({ name, html, avatar, platform, host, color }) {
+  const list = chatPanel();
+  const m = document.createElement('div');
+  m.className = 'msg' + (host ? ' host' : '');
+  const p = PLATFORM[(platform || '').toLowerCase()];
+  const av = avatar ? `<div class="av" style="background:#222 center/cover url('${BL.esc(avatar)}')"></div>`
+                    : `<div class="av" style="background:${color || COLORS[(name || '').length % COLORS.length]}">${BL.esc(initials(name))}</div>`;
+  m.innerHTML = `${av}<div class="body"><div class="who">${BL.esc(name || 'Guest')}${host ? '<em>HOST</em>' : ''}${p ? `<b class="pf" style="background:${p[1]}">${p[0]}</b>` : ''}</div><div class="txt">${html}</div></div>`;
+  list.appendChild(m);
+  while (list.children.length > 8) list.firstElementChild.remove();
+}
+
+// REAL chat via Social Stream Ninja websocket (wss://io.socialstream.ninja, join channel 4 = chat messages)
+let ssnSock = null, ssnSession = '', ssnRetry = null;
+function connectChat(session) {
+  if (session === ssnSession) return;
+  ssnSession = session;
+  clearTimeout(ssnRetry);
+  if (ssnSock) { try { ssnSock.onclose = null; ssnSock.close(); } catch (e) {} ssnSock = null; }
+  if (!session) return;
+  const open = () => {
+    const ws = new WebSocket(q.get('server') || 'wss://io.socialstream.ninja');
+    ssnSock = ws;
+    ws.onopen = () => ws.send(JSON.stringify({ join: session, in: 4, out: 3 }));
+    ws.onmessage = ev => {
+      let d; try { d = JSON.parse(ev.data); } catch (e) { return; }
+      const msg = d && d.overlayNinja ? d.overlayNinja : d;
+      if (!msg || (!msg.chatmessage && !msg.contentimg) || msg.event) return;
+      if (S && S.chat && S.chat.show === false) return;
+      addChat({ name: msg.chatname, html: cleanMessage(msg.chatmessage) || '', avatar: /^https:\/\//.test(msg.chatimg || '') ? msg.chatimg : '', platform: msg.type, host: !!msg.host, color: msg.nameColor });
+    };
+    ws.onclose = () => { if (ssnSession === session) ssnRetry = setTimeout(open, 3000); };   // auto-reconnect
+    ws.onerror = () => { try { ws.close(); } catch (e) {} };
+  };
+  open();
+}
+
+if (SC.chat && q.get('chat') === 'demo') {
+  const list = chatPanel();
   const SAMPLE = [
     ['Grace M.', 'Amen! 🙌'],
     ['Joel Santos', 'Watching from Manila 🙌 God bless Brave Life!'],
@@ -365,15 +428,10 @@ if (SC.chat && q.get('chat') === 'demo') {
     ['Joy A.', 'Amen amen amen'],
   ];
   let k = 0;
-  const initials = n => n.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const PF = ['youtube', 'facebook'];
   const add = () => {
     const [name, text, kind] = SAMPLE[k % SAMPLE.length]; k++;
-    const m = document.createElement('div');
-    m.className = 'msg' + (kind === 'host' ? ' host' : '');
-    m.innerHTML = `<div class="av" style="background:${COLORS[(k * 3) % COLORS.length]}">${BL.esc(initials(name))}</div>
-      <div class="body"><div class="who">${BL.esc(name)}${kind === 'host' ? '<em>HOST</em>' : ''}</div><div class="txt">${BL.esc(text)}</div></div>`;
-    list.appendChild(m);
-    while (list.children.length > 8) list.firstElementChild.remove();
+    addChat({ name, html: BL.esc(text), platform: kind === 'host' ? '' : PF[k % 2], host: kind === 'host', color: COLORS[(k * 3) % COLORS.length] });
   };
   add(); add(); add();
   (function loop() { setTimeout(() => { add(); loop(); }, 2600 + Math.random() * 2400); })();
@@ -394,6 +452,10 @@ const setHTML = (node, h) => { if (node.innerHTML !== h) node.innerHTML = h; };
 
 function render() {
   if (!S) return;
+  if (SC.chat && q.get('chat') !== 'demo') {
+    connectChat(((q.get('session') || (S.chat && S.chat.session) || '') + '').trim());
+    if (chatBox) chatBox.style.display = S.chat && S.chat.show === false ? 'none' : '';
+  }
   if (live) live.classList.toggle('hidden', !S.live.show);
   for (const { n, cfg } of lowers) {
     let person, on;

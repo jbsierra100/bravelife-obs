@@ -20,7 +20,9 @@ window.BL = (function () {
     topic:    { show: true, label: 'NOW DISCUSSING', text: 'Topic goes here',
                 list: ['Topic goes here', 'Common goal, trust, honor', 'Q&A from the chat'] },
     cta:      { show: false, label: 'WATCH MORE', value: 'youtube.com/@bravelife' },
-    give:     { url: 'https://bravelifenow.com/give' }
+    give:     { url: 'https://bravelifenow.com/give' },
+    // live chat (Screen Share scene): Social Stream Ninja session ID from Troy's SSN extension/app
+    chat:     { show: true, session: '' }
   };
 
   // deep merge saved state over defaults (so new fields always exist)
