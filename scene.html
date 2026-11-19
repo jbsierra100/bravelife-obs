@@ -372,10 +372,10 @@ function cleanMessage(html) {
   })(doc.body.firstChild);
   return out.trim();
 }
-function addChat({ name, html, avatar, platform, host, color }) {
+function addChat({ name, html, avatar, platform, host, color, sample }) {
   const list = chatPanel();
   const m = document.createElement('div');
-  m.className = 'msg' + (host ? ' host' : '');
+  m.className = 'msg' + (host ? ' host' : '') + (sample ? ' sample' : '');
   const p = PLATFORM[(platform || '').toLowerCase()];
   const av = avatar ? `<div class="av" style="background:#222 center/cover url('${BL.esc(avatar)}')"></div>`
                     : `<div class="av" style="background:${color || COLORS[(name || '').length % COLORS.length]}">${BL.esc(initials(name))}</div>`;
@@ -401,6 +401,7 @@ function connectChat(session) {
       const msg = d && d.overlayNinja ? d.overlayNinja : d;
       if (!msg || (!msg.chatmessage && !msg.contentimg) || msg.event) return;
       if (S && S.chat && S.chat.show === false) return;
+      goLive();   // first real message → samples disappear for good
       addChat({ name: msg.chatname, html: cleanMessage(msg.chatmessage) || '', avatar: /^https:\/\//.test(msg.chatimg || '') ? msg.chatimg : '', platform: msg.type, host: !!msg.host, color: msg.nameColor });
     };
     ws.onclose = () => { if (ssnSession === session) ssnRetry = setTimeout(open, 3000); };   // auto-reconnect
@@ -409,8 +410,24 @@ function connectChat(session) {
   open();
 }
 
-if (SC.chat && q.get('chat') === 'demo') {
-  const list = chatPanel();
+/* Sample chat while NOT live (so Troy sees the look in OBS); real chat once the stream starts.
+   - OBS "Start Streaming" (obsStreamingStarted) or the first real chat message → samples removed
+   - OBS "Stop Streaming" → samples come back for the next preview
+   - ?chat=demo → always samples (preview link) */
+let sampleTimer = null, realChat = false;
+const forceDemo = q.get('chat') === 'demo';
+function goLive() {
+  if (forceDemo || realChat) return;
+  realChat = true;
+  clearTimeout(sampleTimer); sampleTimer = null;
+  if (chatList) chatList.querySelectorAll('.msg.sample').forEach(m => m.remove());
+}
+function goOffAir() {
+  if (forceDemo) return;
+  realChat = false;
+  startSamples();
+}
+if (SC.chat) {
   const SAMPLE = [
     ['Grace M.', 'Amen! 🙌'],
     ['Joel Santos', 'Watching from Manila 🙌 God bless Brave Life!'],
@@ -430,11 +447,23 @@ if (SC.chat && q.get('chat') === 'demo') {
   let k = 0;
   const PF = ['youtube', 'facebook'];
   const add = () => {
+    if (realChat) return;
     const [name, text, kind] = SAMPLE[k % SAMPLE.length]; k++;
-    addChat({ name, html: BL.esc(text), platform: kind === 'host' ? '' : PF[k % 2], host: kind === 'host', color: COLORS[(k * 3) % COLORS.length] });
+    addChat({ name, html: BL.esc(text), platform: kind === 'host' ? '' : PF[k % 2], host: kind === 'host', color: COLORS[(k * 3) % COLORS.length], sample: true });
   };
-  add(); add(); add();
-  (function loop() { setTimeout(() => { add(); loop(); }, 2600 + Math.random() * 2400); })();
+  window.startSamples = function () {
+    if (sampleTimer || realChat) return;
+    add(); add(); add();
+    (function loop() { sampleTimer = setTimeout(() => { if (realChat) return; add(); loop(); }, 2600 + Math.random() * 2400); })();
+  };
+  // OBS Browser Source events (only exist inside OBS)
+  window.addEventListener('obsStreamingStarted', goLive);
+  window.addEventListener('obsStreamingStopped', goOffAir);
+  const obs = window.obsstudio;
+  if (!forceDemo && obs && typeof obs.getStatus === 'function') {
+    try { obs.getStatus(st => { if (st && st.streaming) goLive(); else startSamples(); }); } catch (e) { startSamples(); }
+    setTimeout(() => { if (!realChat && !sampleTimer) startSamples(); }, 1500);   // if getStatus isn't allowed
+  } else startSamples();
 }
 const live = SC.live ? at(el(`<div class="layer live"><div class="dot"></div><div class="lbl">LIVE</div><div class="shine"></div></div>`), ...SC.live) : null;
 let qr = null;
@@ -452,7 +481,7 @@ const setHTML = (node, h) => { if (node.innerHTML !== h) node.innerHTML = h; };
 
 function render() {
   if (!S) return;
-  if (SC.chat && q.get('chat') !== 'demo') {
+  if (SC.chat && !forceDemo) {
     connectChat(((q.get('session') || (S.chat && S.chat.session) || '') + '').trim());
     if (chatBox) chatBox.style.display = S.chat && S.chat.show === false ? 'none' : '';
   }
