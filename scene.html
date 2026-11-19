@@ -130,6 +130,42 @@
 
   canvas.globe { position: absolute; pointer-events: none; }
 
+  /* ---------- compact name tag inside a camera window (Figma Screen Share 6988:1772) ---------- */
+  .lt.compact .card {
+    box-sizing: border-box; width: var(--w); height: 76px; padding: 0 24px 0 30px; gap: 26px; align-items: center; overflow: hidden;
+    background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,0)), rgba(10,9,8,.85);
+    border: 1.5px solid rgba(255,255,255,.08); box-shadow: 0 18px 44px rgba(0,0,0,.45);
+    -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  }
+  .lt.compact .bar { width: 8px; height: 44px; box-shadow: 0 0 18px rgba(0,225,170,.6); }
+  .lt.compact .txt { min-width: 0; flex: 1; }
+  .lt.compact .nm { font-size: 30px; line-height: 41px; overflow: hidden; text-overflow: ellipsis; }
+  .lt.compact .rl { margin-top: -4px; font-size: 18px; line-height: 25px; overflow: hidden; text-overflow: ellipsis; }
+  .lt.compact .sep { margin: 0 .45em; }
+
+  /* ---------- live chat panel (sample/demo now, real chat later) ---------- */
+  .chat { display: flex; flex-direction: column; }
+  .chat .head { display: flex; align-items: center; gap: 10px; height: 34px; padding-left: 4px; font-weight: 800; font-size: 15px; letter-spacing: .22em; color: var(--mint); }
+  .chat .head i { width: 9px; height: 9px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 10px rgba(0,225,170,.9); animation: livedot 1.3s ease-in-out infinite; }
+  .chat .list {
+    position: relative; flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 70px); mask-image: linear-gradient(180deg, transparent 0, #000 70px);
+  }
+  .chat .msg {
+    display: flex; gap: 12px; align-items: flex-start; margin-top: 10px; padding: 12px 16px 13px 12px; border-radius: 16px;
+    background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02)), rgba(14,13,12,.78);
+    border: 1px solid rgba(255,255,255,.08); box-shadow: 0 10px 24px rgba(0,0,0,.35);
+    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    animation: msgIn .55s cubic-bezier(.16,.84,.24,1) both;
+  }
+  .chat .msg.host { border-color: rgba(0,225,170,.45); }
+  @keyframes msgIn { from { opacity: 0; transform: translateY(26px) scale(.97); } to { opacity: 1; transform: none; } }
+  .chat .av { flex: none; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; color: var(--ink); }
+  .chat .body { min-width: 0; }
+  .chat .who { font-weight: 800; font-size: 17px; line-height: 22px; color: #fff; display: flex; align-items: center; gap: 8px; }
+  .chat .who em { font-style: normal; font-weight: 800; font-size: 11px; letter-spacing: .16em; padding: 2px 8px; border-radius: 99px; background: var(--mint); color: var(--ink); }
+  .chat .txt { font-weight: 500; font-size: 19px; line-height: 26px; color: #e9e3da; overflow-wrap: anywhere; }
+
   /* ---------- slow continuous ticker (e.g. "BRAVELIFE • BRAVELIFE •" under the host) ---------- */
   .ticker { overflow: hidden; }
   .ticker .strip { position: absolute; left: 0; top: 0; height: 100%; background-repeat: repeat-x; will-change: transform; }
@@ -162,8 +198,10 @@ const SCENES = {
     title: 'Screen Share + Host',
     layers: [{ img: 'screen-static' }],
     logo: [75, 43], live: [1692, 92],
-    lowers: [{ x: 80, y: 945, s: 0.62, from: 'lower' }],
-    preview: [{ box: [80, 180, 1260, 709], text: 'SCREEN SHARE' }, { box: [1370, 180, 470, 709], img: 'assets/preview/host.png' }],
+    // Figma "OBS Scene 03 — Share Screen Single Window" (6825:636): screen 1260×829, host window 470×339, name tag inside it
+    lowers: [{ x: 1380, y: 433, s: 1, compact: true, w: 451, from: 'lower' }],
+    chat: { x: 1370, y: 535, w: 470, h: 425 },   // empty area under the host window
+    preview: [{ box: [80, 180, 1260, 829], text: 'SCREEN SHARE' }, { box: [1370, 180, 470, 339], img: 'assets/preview/host.png' }],
   },
   side: {
     title: 'Side-by-Side Conversation',
@@ -299,8 +337,47 @@ if (SC.logo) at(el(`<div class="layer logo"><img class="base" src="assets/starti
 const lowers = (SC.lowers || []).map(cfg => {
   const n = at(el(`<div class="layer lt"><div class="card"><div class="bar"></div><div class="txt"><div class="nm"></div><div class="rl"></div></div></div></div>`), cfg.x, cfg.y);
   n.style.transform = `scale(${cfg.s})`;
+  if (cfg.compact) { n.classList.add('compact'); n.style.setProperty('--w', cfg.w + 'px'); }
   return { n, cfg };
 });
+
+/* ---------- live chat: ?chat=demo shows sample messages so Troy can see how it will look ---------- */
+if (SC.chat && q.get('chat') === 'demo') {
+  const C = SC.chat;
+  const box = at(el(`<div class="layer chat"><div class="head"><i></i>LIVE CHAT</div><div class="list"></div></div>`), C.x, C.y);
+  Object.assign(box.style, { width: C.w + 'px', height: C.h + 'px' });
+  const list = box.querySelector('.list');
+  const COLORS = ['#5ffcc0', '#00e1aa', '#c8b7a3', '#a89886', '#9ee8ff', '#ffd39a', '#d7b9ff'];
+  const SAMPLE = [
+    ['Grace M.', 'Amen! 🙌'],
+    ['Joel Santos', 'Watching from Manila 🇵🇭 God bless Brave Life!'],
+    ['Kristin', 'This is such a powerful word today'],
+    ['Pastor Mike', 'Greetings from Dallas – Fort Worth! 🔥'],
+    ['Abby R.', 'Can you share that verse again?'],
+    ['Daniel', 'Hallelujah! Thank you Jesus'],
+    ['Brave Life Team', 'Give online: bravelifenow.com/give 💚', 'host'],
+    ['Sarah K.', 'Praying for everyone watching right now 🙏'],
+    ['Marco', 'First time here — so glad I found this'],
+    ['Lydia', 'Taking notes!! 📝'],
+    ['Chris T.', 'Romans 8:28 ❤️'],
+    ['Nina', 'Hello from Toronto 👋'],
+    ['Ben', 'That part about partnership hit home'],
+    ['Joy A.', 'Amen amen amen'],
+  ];
+  let k = 0;
+  const initials = n => n.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const add = () => {
+    const [name, text, kind] = SAMPLE[k % SAMPLE.length]; k++;
+    const m = document.createElement('div');
+    m.className = 'msg' + (kind === 'host' ? ' host' : '');
+    m.innerHTML = `<div class="av" style="background:${COLORS[(k * 3) % COLORS.length]}">${BL.esc(initials(name))}</div>
+      <div class="body"><div class="who">${BL.esc(name)}${kind === 'host' ? '<em>HOST</em>' : ''}</div><div class="txt">${BL.esc(text)}</div></div>`;
+    list.appendChild(m);
+    while (list.children.length > 8) list.firstElementChild.remove();
+  };
+  add(); add(); add();
+  (function loop() { setTimeout(() => { add(); loop(); }, 2600 + Math.random() * 2400); })();
+}
 const live = SC.live ? at(el(`<div class="layer live"><div class="dot"></div><div class="lbl">LIVE</div><div class="shine"></div></div>`), ...SC.live) : null;
 let qr = null;
 if (SC.qr) {
