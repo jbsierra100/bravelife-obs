@@ -166,6 +166,13 @@
   .chat .who em { font-style: normal; font-weight: 800; font-size: 11px; letter-spacing: .16em; padding: 2px 8px; border-radius: 99px; background: var(--mint); color: var(--ink); }
   .chat .txt { font-weight: 500; font-size: 19px; line-height: 26px; color: #e9e3da; overflow-wrap: anywhere; }
   .chat .txt .emote { height: 24px; vertical-align: -5px; margin: 0 1px; }
+  /* floating variant (Main Cam): no panel, lighter see-through bubbles so the camera shows behind them */
+  .chat.float .msg {
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01)), rgba(10,9,8,.42);
+    border-color: rgba(255,255,255,.10); box-shadow: 0 8px 20px rgba(0,0,0,.25);
+    -webkit-backdrop-filter: blur(14px) saturate(1.1); backdrop-filter: blur(14px) saturate(1.1);
+  }
+  .chat.float .who, .chat.float .txt, .chat.float .head { text-shadow: 0 1px 6px rgba(0,0,0,.55); }
   .chat .pf { font-style: normal; font-weight: 800; font-size: 10px; letter-spacing: .08em; padding: 2px 6px; border-radius: 6px; color: #fff; }
 
   /* ---------- Camera glow — same smoky glow as the Starting Soon background (Figma "Camera Border Options" #06) ----------
@@ -207,6 +214,8 @@ const SCENES = {
     ],
     logo: [75, 43], live: [1692, 92],
     lowers: [{ x: 80, y: 854, s: 1, from: 'lower' }],
+    // floating live chat on the right of Troy (no panel background — messages float over the camera)
+    chat: { x: 1390, y: 215, w: 450, h: 620, float: true },
     preview: [{ box: [0, 0, 1920, 1080], img: 'assets/preview/solo-host.png' }],
   },
   screen: {
@@ -379,7 +388,7 @@ let chatBox = null, chatList = null;
 function chatPanel() {
   if (chatBox) return chatList;
   const C = SC.chat;
-  chatBox = at(el(`<div class="layer chat"><div class="head"><i></i>LIVE CHAT</div><div class="list"></div></div>`), C.x, C.y);
+  chatBox = at(el(`<div class="layer chat${C.float ? ' float' : ''}"><div class="head"><i></i>LIVE CHAT</div><div class="list"></div></div>`), C.x, C.y);
   Object.assign(chatBox.style, { width: C.w + 'px', height: C.h + 'px' });
   chatList = chatBox.querySelector('.list');
   return chatList;
