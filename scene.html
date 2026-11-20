@@ -173,6 +173,22 @@
     -webkit-backdrop-filter: blur(14px) saturate(1.1); backdrop-filter: blur(14px) saturate(1.1);
   }
   .chat.float .who, .chat.float .txt, .chat.float .head { text-shadow: 0 1px 6px rgba(0,0,0,.55); }
+  /* compact rows (Scene 2): striped rows, avatar · time · Name message — no bubbles, no app icons */
+  .chat.rows .list { justify-content: flex-end; }
+  .chat.rows .msg {
+    margin: 0; padding: 9px 12px; gap: 10px; align-items: flex-start; border-radius: 0; border: 0; box-shadow: none;
+    background: rgba(10, 9, 8, .38); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  }
+  .chat.rows .msg:nth-child(even) { background: rgba(28, 27, 26, .48); }
+  .chat.rows .msg:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+  .chat.rows .msg:last-child { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+  .chat.rows .msg.host { box-shadow: inset 3px 0 0 #00e1aa; }
+  .chat.rows .av { width: 26px; height: 26px; font-size: 11px; margin-top: 1px; }
+  .chat.rows .line { flex: 1; min-width: 0; font-size: 18px; line-height: 26px; color: #ece6dd; overflow-wrap: anywhere; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
+  .chat.rows .tm { font-weight: 600; font-size: 12px; color: #a89886; margin-right: 6px; letter-spacing: .02em; }
+  .chat.rows .nm { font-weight: 800; color: #fff; margin-right: 10px; }
+  .chat.rows .line em { font-style: normal; font-weight: 800; font-size: 10px; letter-spacing: .14em; padding: 1px 6px; border-radius: 99px; background: #00e1aa; color: #0a0908; margin-right: 8px; vertical-align: 2px; }
+  .chat.rows .txt { display: inline; font-size: 18px; font-weight: 500; }
   .chat .pf { font-style: normal; font-weight: 800; font-size: 10px; letter-spacing: .08em; padding: 2px 6px; border-radius: 6px; color: #fff; }
 
   /* ---------- Camera glow — same smoky glow as the Starting Soon background (Figma "Camera Border Options" #06) ----------
@@ -215,7 +231,7 @@ const SCENES = {
     logo: [75, 43], live: [1692, 92],
     lowers: [{ x: 80, y: 854, s: 1, from: 'lower' }],
     // floating live chat on the right of Troy (no panel background — messages float over the camera)
-    chat: { x: 1390, y: 377, w: 450, h: 441, float: true, noHead: true },   // Figma: no "LIVE CHAT" header, sits above the ticker
+    chat: { x: 1390, y: 377, w: 450, h: 441, float: true, noHead: true, rows: true },   // compact row style, no app icons   // Figma: no "LIVE CHAT" header, sits above the ticker
     preview: [{ box: [0, 0, 1920, 1080], img: 'assets/preview/solo-host.png' }],
   },
   screen: {
@@ -388,7 +404,7 @@ let chatBox = null, chatList = null;
 function chatPanel() {
   if (chatBox) return chatList;
   const C = SC.chat;
-  chatBox = at(el(`<div class="layer chat${C.float ? ' float' : ''}">${C.noHead ? '' : '<div class="head"><i></i>LIVE CHAT</div>'}<div class="list"></div></div>`), C.x, C.y);
+  chatBox = at(el(`<div class="layer chat${C.float ? ' float' : ''}${C.rows ? ' rows' : ''}">${C.noHead ? '' : '<div class="head"><i></i>LIVE CHAT</div>'}<div class="list"></div></div>`), C.x, C.y);
   Object.assign(chatBox.style, { width: C.w + 'px', height: C.h + 'px' });
   chatList = chatBox.querySelector('.list');
   return chatList;
@@ -413,6 +429,11 @@ function addChat({ name, html, avatar, platform, host, color, sample }) {
   const p = PLATFORM[(platform || '').toLowerCase()];
   const av = avatar ? `<div class="av" style="background:#222 center/cover url('${BL.esc(avatar)}')"></div>`
                     : `<div class="av" style="background:${color || COLORS[(name || '').length % COLORS.length]}">${BL.esc(initials(name))}</div>`;
+  if (SC.chat && SC.chat.rows) {
+    // compact row: avatar · time · Name  message (no platform icon)
+    const t = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    m.innerHTML = `${av}<div class="line"><span class="tm">${BL.esc(t)}</span><b class="nm">${BL.esc(name || 'Guest')}</b>${host ? '<em>HOST</em>' : ''}<span class="txt">${html}</span></div>`;
+  } else
   m.innerHTML = `${av}<div class="body"><div class="who">${BL.esc(name || 'Guest')}${host ? '<em>HOST</em>' : ''}${p ? `<b class="pf" style="background:${p[1]}">${p[0]}</b>` : ''}</div><div class="txt">${html}</div></div>`;
   list.appendChild(m);
   while (list.children.length > 8) list.firstElementChild.remove();
