@@ -168,17 +168,17 @@
   .chat .txt .emote { height: 24px; vertical-align: -5px; margin: 0 1px; }
   .chat .pf { font-style: normal; font-weight: 800; font-size: 10px; letter-spacing: .08em; padding: 2px 6px; border-radius: 6px; color: #fff; }
 
-  /* ---------- AI Glow camera border (Figma "Camera Border Options" #06) ----------
-     Brave Life tones only: mint → cyan → electric blue → violet. Flows clockwise (to the right), slowly. */
+  /* ---------- AI Glow camera border — Google Gemini style (Figma "Camera Border Options" #06) ----------
+     Soft blue → purple → a hint of rose, smooth and diffused. Flows clockwise (to the right), slowly. */
   .camglow { --ga: 0deg; }
   .camglow .ring, .camglow .halo i {
     position: absolute; border-radius: inherit;
-    background: conic-gradient(from var(--ga), #00e1aa, #22d3ee 20%, #3b82f6 40%, #7c3aed 55%, #3b82f6 70%, #22d3ee 85%, #00e1aa);
+    background: conic-gradient(from var(--ga), #4285f4, #1ba1e3 18%, #5489d6 34%, #9b72cb 55%, #d96570 72%, #9b72cb 86%, #4285f4);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
   }
-  .camglow .ring { inset: 0; padding: 4px; }
-  .camglow .halo { position: absolute; inset: -10px; border-radius: inherit; filter: blur(18px); opacity: .5; }
-  .camglow .halo i { inset: 0; padding: 16px; }
+  .camglow .ring { inset: 0; padding: 3px; }
+  .camglow .halo { position: absolute; inset: -14px; border-radius: inherit; filter: blur(22px); opacity: .55; }
+  .camglow .halo i { inset: 0; padding: 22px; }
 
   /* ---------- slow continuous ticker (e.g. "BRAVELIFE • BRAVELIFE •" under the host) ---------- */
   .ticker { overflow: hidden; }
@@ -223,7 +223,6 @@ const SCENES = {
     layers: [{ img: 'side-static' }],
     logo: [75, 43], live: [1692, 92],
     lowers: [{ x: 80, y: 870, s: 0.66, from: 'tags.left' }, { x: 980, y: 870, s: 0.66, from: 'tags.right' }],
-    cams: [{ x: 80, y: 180, w: 860, h: 660, r: 24 }, { x: 980, y: 180, w: 860, h: 660, r: 24 }],
     preview: [{ box: [80, 180, 860, 660], img: 'assets/preview/host.png' }, { box: [980, 180, 860, 660], img: 'assets/preview/guest.png' }],
   },
   give: {   // Figma "OBS Scene 07 Give" v2 (6864:2006)
