@@ -4,13 +4,13 @@
 window.BL = (function () {
   const DEFAULTS = {
     v: 0,
-    schema: 2,
+    schema: 3,
     live:     { show: true },
     logo:     { show: true },
     episode:  { show: true, name: 'BRAVE LIFE PODCAST', ep: 'EP. 01' },
     countdown:{ show: true, label: 'LIVE IN', minutes: 5, running: false, endAt: 0, remainingMs: 5 * 60000, doneText: '' },
     people: [
-      { first: 'TROY',  last: 'BRAVENBOER', role: 'LEAD PASTOR • BRAVE LIFE', tag: 'HOST' },
+      { first: 'TROY',  last: 'BRAVENBOER', role: 'EVANGELIST', tag: 'HOST' },
       { first: 'SARAH', last: 'BRAVENBOER', role: 'LEAD PASTOR • BRAVE LIFE', tag: 'HOST' },
       { first: 'GUEST', last: 'NAME',       role: 'GUEST TITLE • CHURCH',     tag: 'GUEST' }
     ],
@@ -60,6 +60,11 @@ window.BL = (function () {
     if (saved && (saved.schema || 1) < 2) {
       saved.lower = Object.assign({}, saved.lower, { show: true, autoHide: 0 });
       saved.schema = 2;
+    }
+    // schema 3: Troy's title is now EVANGELIST (only replaces the old default, never a custom role)
+    if (saved && saved.schema < 3) {
+      (saved.people || []).forEach(pp => { if (pp && pp.first === 'TROY' && /^LEAD PASTOR/.test(pp.role || '')) pp.role = 'EVANGELIST'; });
+      saved.schema = 3;
     }
     return saved;
   }
