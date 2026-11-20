@@ -168,6 +168,18 @@
   .chat .txt .emote { height: 24px; vertical-align: -5px; margin: 0 1px; }
   .chat .pf { font-style: normal; font-weight: 800; font-size: 10px; letter-spacing: .08em; padding: 2px 6px; border-radius: 6px; color: #fff; }
 
+  /* ---------- AI Glow camera border (Figma "Camera Border Options" #06) ----------
+     Brave Life tones only: mint → cyan → electric blue → violet. Flows clockwise (to the right), slowly. */
+  .camglow { --ga: 0deg; }
+  .camglow .ring, .camglow .halo i {
+    position: absolute; border-radius: inherit;
+    background: conic-gradient(from var(--ga), #00e1aa, #22d3ee 20%, #3b82f6 40%, #7c3aed 55%, #3b82f6 70%, #22d3ee 85%, #00e1aa);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .camglow .ring { inset: 0; padding: 4px; }
+  .camglow .halo { position: absolute; inset: -10px; border-radius: inherit; filter: blur(18px); opacity: .5; }
+  .camglow .halo i { inset: 0; padding: 16px; }
+
   /* ---------- slow continuous ticker (e.g. "BRAVELIFE • BRAVELIFE •" under the host) ---------- */
   .ticker { overflow: hidden; }
   .ticker .strip { position: absolute; left: 0; top: 0; height: 100%; background-repeat: repeat-x; will-change: transform; }
@@ -202,6 +214,7 @@ const SCENES = {
     logo: [75, 43], live: [1692, 92],
     // Figma "OBS Scene 03 — Share Screen Single Window" (6825:636): screen 1260×829, host window 470×339, name tag inside it
     lowers: [{ x: 1380, y: 433, s: 1, compact: true, w: 451, from: 'lower' }],
+    cams: [{ x: 1370, y: 180, w: 470, h: 340, r: 24 }],   // AI Glow border around Troy's camera
     chat: { x: 1370, y: 535, w: 470, h: 425 },   // empty area under the host window
     preview: [{ box: [80, 180, 1260, 829], text: 'SCREEN SHARE' }, { box: [1370, 180, 470, 340], img: 'assets/preview/host.png' }],
   },
@@ -210,6 +223,7 @@ const SCENES = {
     layers: [{ img: 'side-static' }],
     logo: [75, 43], live: [1692, 92],
     lowers: [{ x: 80, y: 870, s: 0.66, from: 'tags.left' }, { x: 980, y: 870, s: 0.66, from: 'tags.right' }],
+    cams: [{ x: 80, y: 180, w: 860, h: 660, r: 24 }, { x: 980, y: 180, w: 860, h: 660, r: 24 }],
     preview: [{ box: [80, 180, 860, 660], img: 'assets/preview/host.png' }, { box: [980, 180, 860, 660], img: 'assets/preview/guest.png' }],
   },
   give: {   // Figma "OBS Scene 07 Give" v2 (6864:2006)
@@ -334,6 +348,17 @@ function makeGlobe({ x, y, size }) {
     }
     requestAnimationFrame(draw);
   }
+}
+// AI Glow camera borders: angle driven per frame so it flows smoothly in OBS (one clockwise loop ≈ 14 s)
+const camGlows = (SC.cams || []).map(c => {
+  const g = at(el(`<div class="layer camglow"><div class="halo"><i></i></div><div class="ring"></div></div>`), c.x, c.y);
+  Object.assign(g.style, { width: c.w + 'px', height: c.h + 'px', borderRadius: c.r + 'px' });
+  return g;
+});
+if (camGlows.length) {
+  const t0 = performance.now();
+  const spin = now => { const deg = ((now - t0) / 14000 * 360) % 360; camGlows.forEach(g => g.style.setProperty('--ga', deg.toFixed(1) + 'deg')); requestAnimationFrame(spin); };
+  requestAnimationFrame(spin);
 }
 if (SC.logo) at(el(`<div class="layer logo"><img class="base" src="assets/starting-soon/logo-glitch.png" alt=""><img class="r" src="assets/starting-soon/logo-glitch.png" alt=""><img class="c" src="assets/starting-soon/logo-glitch.png" alt=""></div>`), ...SC.logo);
 const lowers = (SC.lowers || []).map(cfg => {
