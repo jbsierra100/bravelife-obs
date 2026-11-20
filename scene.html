@@ -215,7 +215,7 @@ const SCENES = {
     logo: [75, 43], live: [1692, 92],
     lowers: [{ x: 80, y: 854, s: 1, from: 'lower' }],
     // floating live chat on the right of Troy (no panel background — messages float over the camera)
-    chat: { x: 1390, y: 215, w: 450, h: 620, float: true },
+    chat: { x: 1390, y: 377, w: 450, h: 441, float: true, noHead: true },   // Figma: no "LIVE CHAT" header, sits above the ticker
     preview: [{ box: [0, 0, 1920, 1080], img: 'assets/preview/solo-host.png' }],
   },
   screen: {
@@ -388,7 +388,7 @@ let chatBox = null, chatList = null;
 function chatPanel() {
   if (chatBox) return chatList;
   const C = SC.chat;
-  chatBox = at(el(`<div class="layer chat${C.float ? ' float' : ''}"><div class="head"><i></i>LIVE CHAT</div><div class="list"></div></div>`), C.x, C.y);
+  chatBox = at(el(`<div class="layer chat${C.float ? ' float' : ''}">${C.noHead ? '' : '<div class="head"><i></i>LIVE CHAT</div>'}<div class="list"></div></div>`), C.x, C.y);
   Object.assign(chatBox.style, { width: C.w + 'px', height: C.h + 'px' });
   chatList = chatBox.querySelector('.list');
   return chatList;
