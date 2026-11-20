@@ -168,17 +168,18 @@
   .chat .txt .emote { height: 24px; vertical-align: -5px; margin: 0 1px; }
   .chat .pf { font-style: normal; font-weight: 800; font-size: 10px; letter-spacing: .08em; padding: 2px 6px; border-radius: 6px; color: #fff; }
 
-  /* ---------- AI Glow camera border — Google Gemini style (Figma "Camera Border Options" #06) ----------
-     Soft blue → purple → a hint of rose, smooth and diffused. Flows clockwise (to the right), slowly. */
+  /* ---------- Camera glow — same smoky glow as the Starting Soon background (Figma "Camera Border Options" #06) ----------
+     The Starting Soon prism colors, but muted: low opacity + heavy blur over dark, so it reads as a dim,
+     smoky plum / amber / teal haze — not a bright rainbow. Flows clockwise (to the right), slowly. */
   .camglow { --ga: 0deg; }
   .camglow .ring, .camglow .halo i {
     position: absolute; border-radius: inherit;
-    background: conic-gradient(from var(--ga), #4285f4, #1ba1e3 18%, #5489d6 34%, #9b72cb 55%, #d96570 72%, #9b72cb 86%, #4285f4);
+    background: conic-gradient(from var(--ga), #5856d6, #af52de 12%, #ff2d92 25%, #ff9500 40%, #ffd60a 50%, #30d158 62%, #40cbf0 75%, #007aff 88%, #5856d6);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
   }
-  .camglow .ring { inset: 0; padding: 3px; }
-  .camglow .halo { position: absolute; inset: -14px; border-radius: inherit; filter: blur(22px); opacity: .55; }
-  .camglow .halo i { inset: 0; padding: 22px; }
+  .camglow .ring { inset: 0; padding: 2px; opacity: .55; filter: saturate(.75) brightness(.9); }
+  .camglow .halo { position: absolute; inset: -22px; border-radius: inherit; filter: blur(30px) saturate(.7); opacity: .4; }
+  .camglow .halo i { inset: 0; padding: 34px; }
 
   /* ---------- slow continuous ticker (e.g. "BRAVELIFE • BRAVELIFE •" under the host) ---------- */
   .ticker { overflow: hidden; }
