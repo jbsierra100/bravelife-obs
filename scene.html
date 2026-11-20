@@ -201,8 +201,9 @@
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
   }
   .camglow .ring { inset: 0; padding: 2px; opacity: .55; filter: saturate(.75) brightness(.9); }
-  .camglow .halo { position: absolute; inset: -12px; border-radius: inherit; filter: blur(22px) saturate(.6); opacity: .2; }
-  .camglow .halo i { inset: 0; padding: 18px; }
+  /* tight halo: hugs the frame (~8px) so it never competes with the LIVE pill glow */
+  .camglow .halo { position: absolute; inset: -4px; border-radius: inherit; filter: blur(8px) saturate(.6); opacity: .22; }
+  .camglow .halo i { inset: 0; padding: 8px; }
 
   /* ---------- slow continuous ticker (e.g. "BRAVELIFE • BRAVELIFE •" under the host) ---------- */
   .ticker { overflow: hidden; }
